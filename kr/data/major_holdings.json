@@ -1,0 +1,27 @@
+{
+  "period": "2025-Q3",
+  "total_count": 342,
+  "holdings": [
+    {"name": "삼성전자", "code": "005930", "report_date": "2025-09-30", "shares": 670284521, "ownership_pct": 11.23, "reason": "지분율 변동", "sector": "반도체"},
+    {"name": "SK하이닉스", "code": "000660", "report_date": "2025-09-30", "shares": 67845200, "ownership_pct": 9.87, "reason": "지분율 변동", "sector": "반도체"},
+    {"name": "LG에너지솔루션", "code": "373220", "report_date": "2025-09-30", "shares": 18420000, "ownership_pct": 7.87, "reason": "지분율 변동", "sector": "배터리"},
+    {"name": "삼성바이오로직스", "code": "207940", "report_date": "2025-09-30", "shares": 5280000, "ownership_pct": 7.41, "reason": "지분율 변동", "sector": "바이오"},
+    {"name": "현대자동차", "code": "005380", "report_date": "2025-09-30", "shares": 16240000, "ownership_pct": 7.63, "reason": "지분율 변동", "sector": "자동차"},
+    {"name": "기아", "code": "000270", "report_date": "2025-09-30", "shares": 28920000, "ownership_pct": 7.14, "reason": "지분율 변동", "sector": "자동차"},
+    {"name": "셀트리온", "code": "068270", "report_date": "2025-09-30", "shares": 14820000, "ownership_pct": 6.92, "reason": "지분율 변동", "sector": "바이오"},
+    {"name": "KB금융", "code": "105560", "report_date": "2025-09-30", "shares": 25410000, "ownership_pct": 6.85, "reason": "지분율 변동", "sector": "금융"},
+    {"name": "POSCO홀딩스", "code": "005490", "report_date": "2025-09-30", "shares": 5640000, "ownership_pct": 6.67, "reason": "지분율 변동", "sector": "철강"},
+    {"name": "신한지주", "code": "055550", "report_date": "2025-09-30", "shares": 32180000, "ownership_pct": 6.23, "reason": "지분율 변동", "sector": "금융"},
+    {"name": "삼성SDI", "code": "006400", "report_date": "2025-09-30", "shares": 4520000, "ownership_pct": 6.58, "reason": "지분율 변동", "sector": "배터리"},
+    {"name": "LG화학", "code": "051910", "report_date": "2025-09-30", "shares": 4280000, "ownership_pct": 6.07, "reason": "지분율 변동", "sector": "화학"},
+    {"name": "하나금융지주", "code": "086790", "report_date": "2025-09-30", "shares": 18350000, "ownership_pct": 6.12, "reason": "지분율 변동", "sector": "금융"},
+    {"name": "카카오", "code": "035720", "report_date": "2025-09-30", "shares": 28540000, "ownership_pct": 6.42, "reason": "지분율 변동", "sector": "IT"},
+    {"name": "NAVER", "code": "035420", "report_date": "2025-09-30", "shares": 9280000, "ownership_pct": 5.65, "reason": "지분율 변동", "sector": "IT"},
+    {"name": "삼성물산", "code": "028260", "report_date": "2025-09-30", "shares": 9120000, "ownership_pct": 5.43, "reason": "지분율 변동", "sector": "지주"},
+    {"name": "현대모비스", "code": "012330", "report_date": "2025-09-30", "shares": 4950000, "ownership_pct": 5.24, "reason": "지분율 변동", "sector": "자동차부품"},
+    {"name": "삼성화재", "code": "000810", "report_date": "2025-09-30", "shares": 2380000, "ownership_pct": 5.02, "reason": "5% 이상 보유", "sector": "보험"},
+    {"name": "우리금융지주", "code": "316140", "report_date": "2025-09-30", "shares": 42510000, "ownership_pct": 5.84, "reason": "지분율 변동", "sector": "금융"},
+    {"name": "SK이노베이션", "code": "096770", "report_date": "2025-09-30", "shares": 5620000, "ownership_pct": 5.98, "reason": "지분율 변동", "sector": "에너지"}
+  ],
+  "updated_at": "2026-01-29T09:00:00Z"
+}
