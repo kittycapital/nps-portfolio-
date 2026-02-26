@@ -1,0 +1,53 @@
+{
+  "period": "2025-11",
+  "total_fund": 1437.9,
+  "cumulative_return": 950.8,
+  "domestic_ratio": 40.4,
+  "foreign_ratio": 59.6,
+  "direct_mgmt": 49.1,
+  "outsourced_mgmt": 50.9,
+  "allocation": {
+    "domestic_stock": {"amount": 244.8, "weight": 17.0},
+    "foreign_stock": {"amount": 550.0, "weight": 38.3},
+    "domestic_bond": {"amount": 318.2, "weight": 22.1},
+    "foreign_bond": {"amount": 102.6, "weight": 7.1},
+    "alternative": {"amount": 203.6, "weight": 14.2},
+    "short_term": {"amount": 18.7, "weight": 1.3}
+  },
+  "monthly_history": [
+    {"month": "2024-12", "domestic_stock": 218.5, "foreign_stock": 465.2, "domestic_bond": 298.1, "foreign_bond": 88.4, "alternative": 178.3, "short_term": 16.2, "total": 1264.7},
+    {"month": "2025-01", "domestic_stock": 222.1, "foreign_stock": 478.6, "domestic_bond": 301.4, "foreign_bond": 90.1, "alternative": 181.2, "short_term": 15.8, "total": 1289.2},
+    {"month": "2025-02", "domestic_stock": 226.8, "foreign_stock": 488.3, "domestic_bond": 304.8, "foreign_bond": 91.5, "alternative": 184.1, "short_term": 16.5, "total": 1312.0},
+    {"month": "2025-03", "domestic_stock": 224.3, "foreign_stock": 492.1, "domestic_bond": 306.2, "foreign_bond": 92.8, "alternative": 186.5, "short_term": 17.1, "total": 1319.0},
+    {"month": "2025-04", "domestic_stock": 228.5, "foreign_stock": 501.4, "domestic_bond": 308.5, "foreign_bond": 93.4, "alternative": 189.2, "short_term": 16.8, "total": 1337.8},
+    {"month": "2025-05", "domestic_stock": 231.2, "foreign_stock": 510.8, "domestic_bond": 310.1, "foreign_bond": 95.2, "alternative": 192.1, "short_term": 17.3, "total": 1356.7},
+    {"month": "2025-06", "domestic_stock": 233.8, "foreign_stock": 518.2, "domestic_bond": 311.8, "foreign_bond": 96.5, "alternative": 194.8, "short_term": 17.5, "total": 1372.6},
+    {"month": "2025-07", "domestic_stock": 230.1, "foreign_stock": 508.3, "domestic_bond": 313.2, "foreign_bond": 97.1, "alternative": 196.2, "short_term": 18.1, "total": 1363.0},
+    {"month": "2025-08", "domestic_stock": 234.6, "foreign_stock": 521.5, "domestic_bond": 315.4, "foreign_bond": 98.8, "alternative": 198.4, "short_term": 17.8, "total": 1386.5},
+    {"month": "2025-09", "domestic_stock": 237.2, "foreign_stock": 528.9, "domestic_bond": 316.8, "foreign_bond": 99.5, "alternative": 200.1, "short_term": 18.2, "total": 1400.7},
+    {"month": "2025-10", "domestic_stock": 241.5, "foreign_stock": 540.2, "domestic_bond": 317.5, "foreign_bond": 100.8, "alternative": 201.8, "short_term": 18.4, "total": 1420.2},
+    {"month": "2025-11", "domestic_stock": 244.8, "foreign_stock": 550.0, "domestic_bond": 318.2, "foreign_bond": 102.6, "alternative": 203.6, "short_term": 18.7, "total": 1437.9}
+  ],
+  "yearly_total": [
+    {"year": 2016, "total": 558.3},
+    {"year": 2017, "total": 621.7},
+    {"year": 2018, "total": 638.8},
+    {"year": 2019, "total": 736.7},
+    {"year": 2020, "total": 833.7},
+    {"year": 2021, "total": 948.7},
+    {"year": 2022, "total": 890.4},
+    {"year": 2023, "total": 1036.0},
+    {"year": 2024, "total": 1224.8},
+    {"year": 2025, "total": 1437.9}
+  ],
+  "returns": {
+    "ytd": {
+      "domestic_stock": {"return": 11.4, "benchmark": 11.9, "alpha": -0.5},
+      "foreign_stock": {"return": 18.2, "benchmark": 16.9, "alpha": 1.3},
+      "domestic_bond": {"return": 3.2, "benchmark": 3.1, "alpha": 0.1},
+      "foreign_bond": {"return": 4.8, "benchmark": 4.6, "alpha": 0.2},
+      "alternative": {"return": 9.8, "benchmark": 7.7, "alpha": 2.1}
+    }
+  },
+  "updated_at": "2026-01-29T09:00:00Z"
+}
