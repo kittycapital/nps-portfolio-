@@ -20,6 +20,7 @@ from urllib.error import HTTPError
 # ─── 설정 ───────────────────────────────────────────────
 NPS_CIK = "0001608046"
 BASE_URL = "https://data.sec.gov"
+ALT_URL = "https://www.sec.gov"
 USER_AGENT = os.environ.get("SEC_USER_AGENT", "NPS-Portfolio-Tracker admin@example.com")
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "us", "data")
 
@@ -65,6 +66,18 @@ def sec_request(url: str) -> bytes:
         time.sleep(0.15)
 
 
+def sec_request_with_fallback(url: str) -> bytes:
+    """data.sec.gov 실패 시 www.sec.gov로 재시도"""
+    try:
+        return sec_request(url)
+    except HTTPError:
+        if "data.sec.gov" in url:
+            alt = url.replace("data.sec.gov", "www.sec.gov")
+            print(f"[INFO] Retrying with www.sec.gov: {alt}")
+            return sec_request(alt)
+        raise
+
+
 def get_13f_filings() -> list:
     """CIK에 대한 13F-HR filing 목록 조회"""
     url = f"{BASE_URL}/submissions/CIK{NPS_CIK}.json"
@@ -99,6 +112,7 @@ def parse_13f_xml(accession: str) -> list:
     acc_no_dash = accession.replace("-", "")
     cik_num = NPS_CIK.lstrip('0')
     filing_base = f"{BASE_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}"
+    filing_base_alt = f"{ALT_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}"
 
     xml_url = None
 
@@ -123,13 +137,13 @@ def parse_13f_xml(accession: str) -> list:
 
     # 방법 2: index.json 실패 시 HTML index 페이지 파싱
     if not xml_url:
-        index_htm_url = f"https://www.sec.gov/Archives/edgar/data/{cik_num}/{acc_no_dash}/"
+        index_htm_url = f"{ALT_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}/"
         print(f"[INFO] Trying HTML index: {index_htm_url}")
         try:
             html_data = sec_request(index_htm_url).decode("utf-8", errors="replace")
             xml_matches = re.findall(r'href="([^"]*\.xml)"', html_data, re.IGNORECASE)
             for m in xml_matches:
-                fname = m.split("/")[-1]  # 경로에서 파일명만 추출
+                fname = m.split("/")[-1]
                 if "primary" not in fname.lower() and fname.lower() != "r.xml":
                     xml_url = f"{filing_base}/{fname}"
                     break
@@ -154,8 +168,13 @@ def parse_13f_xml(accession: str) -> list:
         print("[WARN] Could not find infotable XML by any method")
         return []
 
+    # XML 다운로드 (data.sec.gov 실패 시 www.sec.gov로 재시도)
     print(f"[INFO] Parsing infotable: {xml_url}")
-    xml_data = sec_request(xml_url)
+    try:
+        xml_data = sec_request_with_fallback(xml_url)
+    except Exception as e:
+        print(f"[WARN] Could not download XML: {e}")
+        return []
 
     root = ET.fromstring(xml_data)
 
@@ -381,13 +400,24 @@ def main():
         print("[ERROR] No 13F filings found")
         sys.exit(1)
 
-    current_filing = filings[0]
-    print(f"\n[INFO] === Current: {current_filing['period']} (filed {current_filing['filing_date']}) ===")
-    current_holdings = parse_13f_xml(current_filing["accession"])
+    # 최신 filing부터 시도, 실패하면 다음 filing으로 (최대 3개)
+    current_holdings = []
+    current_filing = None
+    for f in filings[:3]:
+        print(f"\n[INFO] === Trying: {f['period']} (filed {f['filing_date']}) ===")
+        holdings = parse_13f_xml(f["accession"])
+        if holdings:
+            current_holdings = holdings
+            current_filing = f
+            break
+        else:
+            print(f"[WARN] Filing {f['period']} failed, trying next...")
 
-    if not current_holdings:
-        print("[ERROR] No holdings parsed from current filing")
+    if not current_holdings or not current_filing:
+        print("[ERROR] Could not parse any recent 13F filing")
         sys.exit(1)
+
+    print(f"\n[INFO] Using filing: {current_filing['period']}")
 
     ticker_map = cusip_to_ticker_lookup(current_holdings)
     current_top50, total_value, total_positions = build_top50(current_holdings, ticker_map)
@@ -396,17 +426,21 @@ def main():
     prev_all_holdings = []
     sold_positions = []
 
-    if len(filings) >= 2:
-        prev_filing = filings[1]
-        print(f"\n[INFO] === Previous: {prev_filing['period']} (filed {prev_filing['filing_date']}) ===")
-        prev_holdings = parse_13f_xml(prev_filing["accession"])
+    # 현재 filing 이후의 filing에서 이전 분기 찾기
+    current_idx = filings.index(current_filing)
+    remaining = filings[current_idx + 1:]
+    for f in remaining[:3]:
+        print(f"\n[INFO] === Previous: {f['period']} (filed {f['filing_date']}) ===")
+        prev_holdings = parse_13f_xml(f["accession"])
         if prev_holdings:
             prev_ticker_map = cusip_to_ticker_lookup(prev_holdings)
             prev_top50, prev_total, _ = build_top50(prev_holdings, prev_ticker_map)
             prev_all_holdings = prev_top50
-
             current_top50 = compute_changes(current_top50, prev_top50)
             sold_positions = find_sold_positions(current_top50, prev_top50)
+            break
+        else:
+            print(f"[WARN] Previous filing {f['period']} failed, trying next...")
 
     current_data = {
         "filing_date": current_filing["filing_date"],
@@ -424,9 +458,10 @@ def main():
     print(f"\n[OK] Saved holdings_current.json ({len(current_top50)} positions, total ${total_value:,.0f})")
 
     if prev_top50:
+        prev_f = remaining[0] if remaining else filings[1]
         prev_data = {
-            "filing_date": filings[1]["filing_date"],
-            "period": filings[1]["period"],
+            "filing_date": prev_f["filing_date"],
+            "period": prev_f["period"],
             "total_value": prev_total,
             "top50": prev_top50,
         }
