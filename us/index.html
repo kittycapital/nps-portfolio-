@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>국민연금 미국 주식 포트폴리오 | NPS US Stock Holdings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-card: #151d2e;
+    --bg-card-hover: #1a2340;
+    --border: #1e2a42;
+    --border-accent: #2a3a5c;
+    --text-primary: #e8ecf4;
+    --text-secondary: #8896b0;
+    --text-muted: #5a6a84;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-yellow: #f59e0b;
+    --accent-purple: #8b5cf6;
+    --accent-orange: #f97316;
+    --accent-pink: #ec4899;
+    --new-badge: #6366f1;
+    --font-sans: 'Noto Sans KR', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
+
+  /* ─── Header ─── */
+  .header {
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .flag { font-size: 28px; }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .header h1 span {
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-left: 8px;
+  }
+  .header-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-top: 4px;
+  }
+  .header-meta .period {
+    color: var(--accent-cyan);
+  }
+
+  /* ─── Summary Cards ─── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+  .summary-card:hover { border-color: var(--border-accent); }
+  .summary-card .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .summary-card .value {
+    font-family: var(--font-mono);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .summary-card .sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    font-family: var(--font-mono);
+  }
+  .summary-card .sub.positive { color: var(--accent-green); }
+  .summary-card .sub.negative { color: var(--accent-red); }
+
+  /* ─── Section ─── */
+  .section {
+    margin-bottom: 32px;
+  }
+  .section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .icon { font-size: 18px; }
+
+  /* ─── Table ─── */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-card);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th.right, td.right { text-align: right; }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-card-hover); }
+  td {
+    padding: 10px 14px;
+    white-space: nowrap;
+  }
+  .rank-cell {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    width: 36px;
+  }
+  .ticker-cell {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent-cyan);
+    font-size: 13px;
+  }
+  .name-cell {
+    color: var(--text-secondary);
+    font-size: 12px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sector-cell {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .mono-cell {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .weight-bar {
+    display: inline-block;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--accent-blue);
+    margin-right: 6px;
+    vertical-align: middle;
+    opacity: 0.7;
+  }
+
+  /* Change Badges */
+  .badge {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .badge-new { background: rgba(99,102,241,0.15); color: var(--new-badge); }
+  .badge-up { background: rgba(16,185,129,0.12); color: var(--accent-green); }
+  .badge-down { background: rgba(239,68,68,0.12); color: var(--accent-red); }
+  .badge-flat { background: rgba(88,96,116,0.2); color: var(--text-muted); }
+
+  /* ─── Charts Grid ─── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .chart-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .chart-card h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chart-container {
+    position: relative;
+    height: 260px;
+  }
+
+  /* ─── Trade Activity ─── */
+  .trade-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .trade-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .trade-card h4 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .trade-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .trade-item:last-child { border-bottom: none; }
+  .trade-ticker {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent-cyan);
+  }
+  .trade-name {
+    color: var(--text-muted);
+    font-size: 11px;
+    margin-left: 8px;
+  }
+  .trade-val {
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+  .trade-val.buy { color: var(--accent-green); }
+  .trade-val.sell { color: var(--accent-red); }
+
+  /* ─── Bar Chart Section ─── */
+  .bar-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .bar-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  /* ─── Footer ─── */
+  .footer {
+    margin-top: 36px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.8;
+  }
+  .footer a {
+    color: var(--accent-blue);
+    text-decoration: none;
+  }
+  .footer a:hover { text-decoration: underline; }
+
+  /* ─── Loading ─── */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent-cyan);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 10px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 768px) {
+    .container { padding: 16px 14px; }
+    .header h1 { font-size: 18px; }
+    .header h1 span { display: block; margin-left: 0; margin-top: 2px; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .summary-card .value { font-size: 20px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .trade-grid { grid-template-columns: 1fr; }
+    .chart-container { height: 220px; }
+    table { font-size: 12px; }
+    td, th { padding: 8px 10px; }
+    .name-cell { display: none; }
+  }
+  @media (max-width: 480px) {
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .sector-cell { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <div class="loading" id="loader">
+    <div class="spinner"></div> 데이터 로드 중...
+  </div>
+</div>
+
+<script>
+const DATA_BASE = './data/';
+const SECTOR_COLORS = {
+  'Information Technology': '#3b82f6',
+  'Health Care': '#10b981',
+  'Financials': '#f59e0b',
+  'Consumer Discretionary': '#ec4899',
+  'Consumer Staples': '#8b5cf6',
+  'Communication Services': '#06b6d4',
+  'Energy': '#f97316',
+  'Industrials': '#64748b',
+  'Materials': '#a78bfa',
+  'Utilities': '#34d399',
+  'ETF': '#94a3b8',
+  'Other': '#475569',
+};
+
+function fmt(n) {
+  if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return '$' + (n / 1e6).toFixed(0) + 'M';
+  return '$' + n.toLocaleString();
+}
+function fmtKr(n) {
+  if (n >= 1e12) return (n / 1e12).toFixed(1) + '조';
+  if (n >= 1e8) return (n / 1e8).toFixed(0) + '억';
+  return n.toLocaleString();
+}
+function fmtShares(n) {
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+  return n.toLocaleString();
+}
+function periodLabel(p) {
+  const d = new Date(p);
+  const y = d.getFullYear();
+  const m = d.getMonth();
+  const q = Math.floor(m / 3) + 1;
+  return y + ' Q' + q;
+}
+
+async function loadJSON(file) {
+  const resp = await fetch(DATA_BASE + file);
+  if (!resp.ok) throw new Error('Failed: ' + file);
+  return resp.json();
+}
+
+async function init() {
+  try {
+    const [current, history] = await Promise.all([
+      loadJSON('holdings_current.json'),
+      loadJSON('holdings_history.json'),
+    ]);
+    render(current, history);
+  } catch (e) {
+    document.getElementById('loader').innerHTML =
+      '<span style="color:var(--accent-red)">데이터 로드 실패: ' + e.message + '</span>';
+  }
+}
+
+function render(data, history) {
+  const app = document.getElementById('app');
+  const prev = history.length >= 2 ? history[history.length - 2] : null;
+  const valueDiff = prev ? data.total_value - prev.total_value : 0;
+  const valueDiffPct = prev ? ((valueDiff / prev.total_value) * 100).toFixed(1) : 0;
+
+  // Sector aggregation
+  const sectorMap = {};
+  data.top50.forEach(h => {
+    const s = h.sector || 'Other';
+    sectorMap[s] = (sectorMap[s] || 0) + h.value;
+  });
+  const sectorEntries = Object.entries(sectorMap).sort((a, b) => b[1] - a[1]);
+
+  // New buys
+  const newBuys = data.top50.filter(h => h.status === 'new');
+  // Top movers
+  const movers = [...data.top50]
+    .filter(h => h.status !== 'unchanged' && h.status !== 'new')
+    .sort((a, b) => Math.abs(b.change_pct) - Math.abs(a.change_pct))
+    .slice(0, 8);
+
+  app.innerHTML = `
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <span class="flag">🇺🇸</span>
+        <h1>국민연금 미국 주식 포트폴리오 <span>NPS 13F Holdings</span></h1>
+      </div>
+      <div class="header-meta">
+        Filing: <span class="period">${data.filing_date}</span> &nbsp;|&nbsp;
+        Period: <span class="period">${periodLabel(data.period)}</span> &nbsp;|&nbsp;
+        SEC EDGAR CIK 0001608046
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="label">총 보유 금액</div>
+        <div class="value">${fmt(data.total_value)}</div>
+        <div class="sub ${valueDiff >= 0 ? 'positive' : 'negative'}">
+          ${valueDiff >= 0 ? '▲' : '▼'} ${fmt(Math.abs(valueDiff))} (${valueDiff >= 0 ? '+' : ''}${valueDiffPct}%)
+        </div>
+      </div>
+      <div class="summary-card">
+        <div class="label">총 보유 종목</div>
+        <div class="value">${data.total_positions}</div>
+        <div class="sub">Top 50 비중: ${(data.top50_value / data.total_value * 100).toFixed(1)}%</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">신규 매수</div>
+        <div class="value" style="color:var(--accent-green)">${newBuys.length}종목</div>
+        <div class="sub">${newBuys.map(h => h.ticker).join(', ') || '-'}</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">완전 매도</div>
+        <div class="value" style="color:var(--accent-red)">${data.sold_positions.length}종목</div>
+        <div class="sub">${data.sold_positions.map(h => h.ticker).join(', ') || '-'}</div>
+      </div>
+    </div>
+
+    <!-- Charts: Sector + History -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3><span class="icon">🎯</span> 섹터별 비중 (Top 50)</h3>
+        <div class="chart-container"><canvas id="sectorChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3><span class="icon">📈</span> 분기별 총 보유금액 추이</h3>
+        <div class="chart-container"><canvas id="historyChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Trade Activity -->
+    <div class="section">
+      <div class="section-title"><span class="icon">🔄</span> 분기별 매매 동향</div>
+      <div class="trade-grid">
+        <div class="trade-card">
+          <h4 style="color:var(--accent-green)">🟢 신규 매수</h4>
+          ${newBuys.length ? newBuys.map(h => `
+            <div class="trade-item">
+              <div><span class="trade-ticker">${h.ticker}</span><span class="trade-name">${h.name}</span></div>
+              <span class="trade-val buy">${fmt(h.value)}</span>
+            </div>
+          `).join('') : '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">해당 없음</div>'}
+        </div>
+        <div class="trade-card">
+          <h4 style="color:var(--accent-red)">🔴 완전 매도</h4>
+          ${data.sold_positions.length ? data.sold_positions.map(h => `
+            <div class="trade-item">
+              <div><span class="trade-ticker">${h.ticker}</span><span class="trade-name">${h.name}</span></div>
+              <span class="trade-val sell">${fmt(h.value)}</span>
+            </div>
+          `).join('') : '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">해당 없음</div>'}
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Movers Bar Chart -->
+    <div class="section">
+      <div class="bar-section">
+        <h3><span class="icon">⚡</span> 주요 비중 변동 종목 (전 분기 대비)</h3>
+        <div class="chart-container" style="height:240px;"><canvas id="moversChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Holdings Table -->
+    <div class="section">
+      <div class="section-title"><span class="icon">📋</span> Top 50 보유 종목</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>티커</th>
+              <th>종목명</th>
+              <th>섹터</th>
+              <th class="right">보유주식</th>
+              <th class="right">시장가치</th>
+              <th class="right">비중</th>
+              <th class="right">변동</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.top50.map(h => {
+              let badge = '';
+              if (h.status === 'new') badge = '<span class="badge badge-new">▲ NEW</span>';
+              else if (h.status === 'increased') badge = `<span class="badge badge-up">+${h.change_pct}%</span>`;
+              else if (h.status === 'decreased') badge = `<span class="badge badge-down">${h.change_pct}%</span>`;
+              else badge = '<span class="badge badge-flat">━</span>';
+
+              const barW = Math.max(2, h.weight * 12);
+              return `<tr>
+                <td class="rank-cell">${h.rank}</td>
+                <td class="ticker-cell">${h.ticker || '—'}</td>
+                <td class="name-cell">${h.name}</td>
+                <td class="sector-cell">${h.sector}</td>
+                <td class="mono-cell right">${fmtShares(h.shares)}</td>
+                <td class="mono-cell right">${fmt(h.value)}</td>
+                <td class="mono-cell right"><span class="weight-bar" style="width:${barW}px"></span>${h.weight}%</td>
+                <td class="right">${badge}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      데이터 출처: <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001608046&type=13F&dateb=&owner=include&count=40" target="_blank" rel="noopener">SEC EDGAR</a> 13F Filing (CIK: 0001608046)<br>
+      본 대시보드는 정보 제공 목적이며, 투자 권유가 아닙니다.<br>
+      © HerdVibe · 마지막 업데이트: ${data.updated_at ? new Date(data.updated_at).toLocaleDateString('ko-KR') : '—'}
+    </div>
+  `;
+
+  // ─── Sector Donut Chart ───
+  const sectorCtx = document.getElementById('sectorChart').getContext('2d');
+  new Chart(sectorCtx, {
+    type: 'doughnut',
+    data: {
+      labels: sectorEntries.map(e => e[0]),
+      datasets: [{
+        data: sectorEntries.map(e => e[1]),
+        backgroundColor: sectorEntries.map(e => SECTOR_COLORS[e[0]] || '#475569'),
+        borderWidth: 0,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            color: '#8896b0',
+            font: { family: "'Noto Sans KR'", size: 11 },
+            padding: 10,
+            boxWidth: 12,
+            boxHeight: 12,
+            borderRadius: 3,
+            useBorderRadius: true,
+          }
+        },
+        tooltip: {
+          backgroundColor: '#1a2340',
+          titleFont: { family: "'Noto Sans KR'" },
+          bodyFont: { family: "'JetBrains Mono'", size: 12 },
+          borderColor: '#2a3a5c',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => {
+              const val = ctx.raw;
+              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              return ` ${fmt(val)} (${(val/total*100).toFixed(1)}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // ─── History Line Chart ───
+  const histCtx = document.getElementById('historyChart').getContext('2d');
+  new Chart(histCtx, {
+    type: 'line',
+    data: {
+      labels: history.map(h => periodLabel(h.period)),
+      datasets: [{
+        label: '총 보유금액',
+        data: history.map(h => h.total_value / 1e9),
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59,130,246,0.08)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 4,
+        pointBackgroundColor: '#3b82f6',
+        pointBorderColor: '#0a0e17',
+        pointBorderWidth: 2,
+        pointHoverRadius: 6,
+      }, {
+        label: '종목 수',
+        data: history.map(h => h.total_positions),
+        borderColor: '#8b5cf6',
+        borderDash: [4, 4],
+        tension: 0.3,
+        pointRadius: 3,
+        pointBackgroundColor: '#8b5cf6',
+        yAxisID: 'y1',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: {
+            color: '#8896b0',
+            font: { family: "'Noto Sans KR'", size: 11 },
+            boxWidth: 16, boxHeight: 2,
+          }
+        },
+        tooltip: {
+          backgroundColor: '#1a2340',
+          titleFont: { family: "'Noto Sans KR'" },
+          bodyFont: { family: "'JetBrains Mono'", size: 12 },
+          borderColor: '#2a3a5c',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => {
+              if (ctx.datasetIndex === 0) return ` $${ctx.raw.toFixed(1)}B`;
+              return ` ${ctx.raw} 종목`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#5a6a84', font: { family: "'JetBrains Mono'", size: 10 } },
+          grid: { color: 'rgba(255,255,255,0.03)' },
+        },
+        y: {
+          position: 'left',
+          ticks: {
+            color: '#5a6a84',
+            font: { family: "'JetBrains Mono'", size: 10 },
+            callback: v => '$' + v + 'B'
+          },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+        },
+        y1: {
+          position: 'right',
+          ticks: {
+            color: '#5a6a84',
+            font: { family: "'JetBrains Mono'", size: 10 },
+          },
+          grid: { drawOnChartArea: false },
+        }
+      }
+    }
+  });
+
+  // ─── Top Movers Bar Chart ───
+  const mCtx = document.getElementById('moversChart').getContext('2d');
+  const moversSorted = movers.sort((a, b) => b.change_pct - a.change_pct);
+  new Chart(mCtx, {
+    type: 'bar',
+    data: {
+      labels: moversSorted.map(h => h.ticker),
+      datasets: [{
+        data: moversSorted.map(h => h.change_pct),
+        backgroundColor: moversSorted.map(h =>
+          h.change_pct >= 0 ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)'
+        ),
+        borderRadius: 4,
+        barThickness: 28,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a2340',
+          bodyFont: { family: "'JetBrains Mono'", size: 12 },
+          borderColor: '#2a3a5c',
+          borderWidth: 1,
+          callbacks: {
+            label: ctx => ` ${ctx.raw > 0 ? '+' : ''}${ctx.raw}% (${fmtShares(Math.abs(movers[ctx.dataIndex].change_shares))} shares)`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#5a6a84',
+            font: { family: "'JetBrains Mono'", size: 10 },
+            callback: v => v + '%'
+          },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+        },
+        y: {
+          ticks: {
+            color: '#06b6d4',
+            font: { family: "'JetBrains Mono'", size: 12, weight: 600 },
+          },
+          grid: { display: false },
+        }
+      }
+    }
+  });
+}
+
+// Start
+init();
+</script>
+</body>
+</html>
