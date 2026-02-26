@@ -48,11 +48,17 @@ SECTOR_MAP = {
 
 
 def sec_request(url: str) -> bytes:
-    """SEC EDGAR API 요청 (User-Agent 필수, rate limit 준수)"""
+    """SEC EDGAR API 요청 (User-Agent 필수, rate limit 준수, gzip 자동 해제)"""
     req = Request(url, headers={"User-Agent": USER_AGENT})
     try:
         resp = urlopen(req, timeout=30)
-        return resp.read()
+        data = resp.read()
+        # SEC 서버가 gzip으로 응답할 수 있으므로 항상 해제 시도
+        try:
+            data = gzip.decompress(data)
+        except (OSError, Exception):
+            pass  # gzip이 아니면 원본 데이터 그대로 사용
+        return data
     except HTTPError as e:
         print(f"[ERROR] HTTP {e.code} for {url}")
         raise
