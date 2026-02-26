@@ -1,0 +1,43 @@
+name: Update NPS KR Portfolio
+
+on:
+  schedule:
+    # 매월 5일 (전월 데이터 반영 여유)
+    - cron: '0 9 5 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-kr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch NPS KR Data
+        env:
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+          DART_API_KEY: ${{ secrets.DART_API_KEY }}
+        run: |
+          python scripts/fetch_nps_kr.py
+
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add kr/data/*.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "📊 Update NPS KR portfolio $(date +%Y-%m-%d)"
+            git push
+          fi
