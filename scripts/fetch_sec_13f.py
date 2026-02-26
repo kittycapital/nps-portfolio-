@@ -48,15 +48,11 @@ SECTOR_MAP = {
 
 
 def sec_request(url: str) -> bytes:
-    """SEC EDGAR API 요청 (User-Agent 필수, rate limit 준수, gzip 자동 해제)"""
-    req = Request(url, headers={"User-Agent": USER_AGENT, "Accept-Encoding": "gzip"})
+    """SEC EDGAR API 요청 (User-Agent 필수, rate limit 준수)"""
+    req = Request(url, headers={"User-Agent": USER_AGENT})
     try:
         resp = urlopen(req, timeout=30)
-        data = resp.read()
-        # gzip 압축 응답 자동 해제
-        if resp.headers.get("Content-Encoding") == "gzip" or data[:2] == b'\x1f\x8b':
-            data = gzip.decompress(data)
-        return data
+        return resp.read()
     except HTTPError as e:
         print(f"[ERROR] HTTP {e.code} for {url}")
         raise
