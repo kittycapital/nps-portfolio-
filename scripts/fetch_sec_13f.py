@@ -6,6 +6,7 @@
 - 분기별 13F-HR filing에서 보유 종목 파싱
 """
 
+import gzip
 import json
 import os
 import re
@@ -22,7 +23,7 @@ BASE_URL = "https://data.sec.gov"
 USER_AGENT = os.environ.get("SEC_USER_AGENT", "NPS-Portfolio-Tracker admin@example.com")
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "us", "data")
 
-# 섹터 매핑 (CUSIP 기반 대략적 분류, 티커 기반으로 보완)
+# 섹터 매핑 (티커 기반)
 SECTOR_MAP = {
     "AAPL": "Information Technology", "MSFT": "Information Technology",
     "NVDA": "Information Technology", "GOOGL": "Information Technology",
@@ -47,11 +48,15 @@ SECTOR_MAP = {
 
 
 def sec_request(url: str) -> bytes:
-    """SEC EDGAR API 요청 (User-Agent 필수, rate limit 준수)"""
+    """SEC EDGAR API 요청 (User-Agent 필수, rate limit 준수, gzip 자동 해제)"""
     req = Request(url, headers={"User-Agent": USER_AGENT, "Accept-Encoding": "gzip"})
     try:
         resp = urlopen(req, timeout=30)
-        return resp.read()
+        data = resp.read()
+        # gzip 압축 응답 자동 해제
+        if resp.headers.get("Content-Encoding") == "gzip" or data[:2] == b'\x1f\x8b':
+            data = gzip.decompress(data)
+        return data
     except HTTPError as e:
         print(f"[ERROR] HTTP {e.code} for {url}")
         raise
@@ -92,16 +97,15 @@ def get_13f_filings() -> list:
 def parse_13f_xml(accession: str) -> list:
     """13F filing의 information table XML 파싱"""
     acc_no_dash = accession.replace("-", "")
+    cik_num = NPS_CIK.lstrip('0')
     # Filing index 페이지에서 infotable XML 찾기
-    index_url = f"{BASE_URL}/Archives/edgar/data/{NPS_CIK.lstrip('0')}/{acc_no_dash}/index.json"
+    index_url = f"{BASE_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}/index.json"
     print(f"[INFO] Fetching filing index: {index_url}")
 
     try:
         index_data = json.loads(sec_request(index_url))
-    except Exception:
-        # fallback: index.json이 없으면 직접 XML 경로 추정
-        index_url = f"https://www.sec.gov/Archives/edgar/data/{NPS_CIK.lstrip('0')}/{acc_no_dash}/"
-        print(f"[WARN] Trying alternative index: {index_url}")
+    except Exception as e:
+        print(f"[WARN] Could not fetch index: {e}")
         return []
 
     # infotable 파일 찾기
@@ -109,7 +113,7 @@ def parse_13f_xml(accession: str) -> list:
     for item in index_data.get("directory", {}).get("item", []):
         name = item.get("name", "").lower()
         if "infotable" in name and name.endswith(".xml"):
-            xml_url = f"{BASE_URL}/Archives/edgar/data/{NPS_CIK.lstrip('0')}/{acc_no_dash}/{item['name']}"
+            xml_url = f"{BASE_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}/{item['name']}"
             break
 
     if not xml_url:
@@ -117,7 +121,7 @@ def parse_13f_xml(accession: str) -> list:
         for item in index_data.get("directory", {}).get("item", []):
             name = item.get("name", "").lower()
             if name.endswith(".xml") and "primary" not in name:
-                xml_url = f"{BASE_URL}/Archives/edgar/data/{NPS_CIK.lstrip('0')}/{acc_no_dash}/{item['name']}"
+                xml_url = f"{BASE_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}/{item['name']}"
                 break
 
     if not xml_url:
@@ -127,29 +131,104 @@ def parse_13f_xml(accession: str) -> list:
     print(f"[INFO] Parsing infotable: {xml_url}")
     xml_data = sec_request(xml_url)
 
-    # XML 네임스페이스 처리
-    ns = {"ns": "http://www.sec.gov/Archives/edgar/xbrl/13f/13fDocument"}
+    # XML 파싱 - 여러 네임스페이스 시도
     root = ET.fromstring(xml_data)
 
-    holdings = []
-    for info in root.findall(".//ns:infoTable", ns):
-        name = info.findtext("ns:nameOfIssuer", "", ns).strip()
-        title = info.findtext("ns:titleOfClass", "", ns).strip()
-        cusip = info.findtext("ns:cusip", "", ns).strip()
-        value = info.findtext("ns:value", "0", ns).strip()
-        shares_elem = info.find("ns:shrsOrPrnAmt/ns:sshPrnamt", ns)
-        shares = shares_elem.text.strip() if shares_elem is not None else "0"
-        share_type_elem = info.find("ns:shrsOrPrnAmt/ns:sshPrnamtType", ns)
-        share_type = share_type_elem.text.strip() if share_type_elem is not None else "SH"
+    # 네임스페이스 자동 감지
+    ns_match = re.match(r'\{(.+?)\}', root.tag)
+    default_ns = ns_match.group(1) if ns_match else ""
 
-        holdings.append({
-            "name": name,
-            "title": title,
-            "cusip": cusip,
-            "value": int(value) * 1000,  # 13F value는 천 달러 단위
-            "shares": int(shares),
-            "share_type": share_type,
-        })
+    # infoTable 태그 찾기 (네임스페이스 유무 모두 대응)
+    holdings = []
+    info_tables = []
+
+    if default_ns:
+        info_tables = root.findall(f".//{{{default_ns}}}infoTable")
+
+    if not info_tables:
+        # 네임스페이스 없이 시도
+        info_tables = root.findall(".//infoTable")
+
+    if not info_tables:
+        # 모든 하위 요소에서 찾기
+        for elem in root.iter():
+            if elem.tag.lower().endswith("infotable"):
+                info_tables.append(elem)
+
+    print(f"[INFO] Found {len(info_tables)} infoTable entries")
+
+    for info in info_tables:
+        # 태그 이름에서 네임스페이스 추출
+        tag_ns = ""
+        ns_m = re.match(r'\{(.+?)\}', info.tag)
+        if ns_m:
+            tag_ns = ns_m.group(1)
+
+        def find_text(parent, tag, default=""):
+            """네임스페이스 유무 모두 대응하는 텍스트 추출"""
+            # 네임스페이스 포함 시도
+            if tag_ns:
+                elem = parent.find(f"{{{tag_ns}}}{tag}")
+                if elem is not None and elem.text:
+                    return elem.text.strip()
+            # 네임스페이스 없이 시도
+            elem = parent.find(tag)
+            if elem is not None and elem.text:
+                return elem.text.strip()
+            # 대소문자 무시 검색
+            for child in parent:
+                local = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+                if local.lower() == tag.lower():
+                    return child.text.strip() if child.text else default
+            return default
+
+        def find_nested_text(parent, path, default=""):
+            """중첩된 태그에서 텍스트 추출 (예: shrsOrPrnAmt/sshPrnamt)"""
+            parts = path.split("/")
+            current = parent
+            for part in parts:
+                found = None
+                if tag_ns:
+                    found = current.find(f"{{{tag_ns}}}{part}")
+                if found is None:
+                    found = current.find(part)
+                if found is None:
+                    # 대소문자 무시
+                    for child in current:
+                        local = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+                        if local.lower() == part.lower():
+                            found = child
+                            break
+                if found is None:
+                    return default
+                current = found
+            return current.text.strip() if current is not None and current.text else default
+
+        name = find_text(info, "nameOfIssuer")
+        title = find_text(info, "titleOfClass")
+        cusip = find_text(info, "cusip")
+        value_str = find_text(info, "value", "0")
+        shares_str = find_nested_text(info, "shrsOrPrnAmt/sshPrnamt", "0")
+        share_type = find_nested_text(info, "shrsOrPrnAmt/sshPrnamtType", "SH")
+
+        try:
+            value = int(value_str) * 1000  # 13F value는 천 달러 단위
+        except (ValueError, TypeError):
+            value = 0
+        try:
+            shares = int(shares_str)
+        except (ValueError, TypeError):
+            shares = 0
+
+        if name:  # 이름이 있는 항목만 추가
+            holdings.append({
+                "name": name,
+                "title": title,
+                "cusip": cusip,
+                "value": value,
+                "shares": shares,
+                "share_type": share_type,
+            })
 
     print(f"[INFO] Parsed {len(holdings)} holdings")
     return holdings
@@ -157,32 +236,45 @@ def parse_13f_xml(accession: str) -> list:
 
 def cusip_to_ticker_lookup(holdings: list) -> dict:
     """
-    CUSIP → 티커 매핑 (간단한 이름 기반 매핑)
+    CUSIP → 티커 매핑 (이름 기반 매핑)
     실제 운영 시 OpenFIGI API (무료) 활용 권장
     """
     name_ticker = {
         "APPLE INC": "AAPL", "MICROSOFT CORP": "MSFT", "NVIDIA CORP": "NVDA",
         "AMAZON COM INC": "AMZN", "AMAZON.COM INC": "AMZN",
         "ALPHABET INC": "GOOGL", "META PLATFORMS INC": "META",
+        "META PLATFORMS": "META",
         "TESLA INC": "TSLA", "BERKSHIRE HATHAWAY": "BRK-B",
         "JPMORGAN CHASE": "JPM", "VISA INC": "V",
-        "UNITEDHEALTH GROUP": "UNH", "JOHNSON & JOHNSON": "JNJ",
-        "EXXON MOBIL CORP": "XOM", "PROCTER & GAMBLE": "PG",
+        "UNITEDHEALTH GROUP": "UNH", "UNITEDHEALTH GRP": "UNH",
+        "JOHNSON & JOHNSON": "JNJ", "JOHNSON &amp; JOHNSON": "JNJ",
+        "EXXON MOBIL CORP": "XOM", "EXXON MOBIL": "XOM",
+        "PROCTER & GAMBLE": "PG", "PROCTER &amp; GAMBLE": "PG",
         "MASTERCARD INC": "MA", "ELI LILLY & CO": "LLY",
+        "ELI LILLY": "LLY",
         "BROADCOM INC": "AVGO", "HOME DEPOT INC": "HD",
+        "HOME DEPOT": "HD",
         "CHEVRON CORP": "CVX", "ABBVIE INC": "ABBV",
-        "MERCK & CO INC": "MRK", "COCA COLA CO": "KO", "COCA-COLA CO": "KO",
+        "MERCK & CO INC": "MRK", "MERCK & CO": "MRK",
+        "COCA COLA CO": "KO", "COCA-COLA CO": "KO",
         "PEPSICO INC": "PEP", "COSTCO WHOLESALE": "COST",
         "PFIZER INC": "PFE", "WALMART INC": "WMT",
         "ORACLE CORP": "ORCL", "SALESFORCE INC": "CRM",
         "ADVANCED MICRO DEVICES": "AMD", "ADOBE INC": "ADBE",
         "INTEL CORP": "INTC", "CISCO SYSTEMS": "CSCO",
         "ACCENTURE PLC": "ACN", "NETFLIX INC": "NFLX",
-        "WALT DISNEY CO": "DIS", "CONOCOPHILLIPS": "COP",
-        "BANK OF AMERICA": "BAC", "WELLS FARGO": "WFC",
-        "AT&T INC": "T", "VERIZON COMMUNICATIONS": "VZ",
+        "WALT DISNEY CO": "DIS", "WALT DISNEY": "DIS",
+        "CONOCOPHILLIPS": "COP",
+        "BANK OF AMERICA": "BAC", "BANK AMER CORP": "BAC",
+        "WELLS FARGO": "WFC",
+        "AT&T INC": "T", "AT&AMP;T INC": "T",
+        "VERIZON COMMUNICATIONS": "VZ", "VERIZON COMMUN": "VZ",
         "LINDE PLC": "LIN", "NEXTERA ENERGY": "NEE",
         "MCDONALDS CORP": "MCD",
+        "THERMO FISHER": "TMO", "DANAHER CORP": "DHR",
+        "SERVICENOW": "NOW", "INTUIT INC": "INTU",
+        "TEXAS INSTRUMENTS": "TXN", "CATERPILLAR INC": "CAT",
+        "BOOKING HOLDINGS": "BKNG",
     }
 
     mapping = {}
@@ -289,6 +381,11 @@ def main():
     current_filing = filings[0]
     print(f"\n[INFO] === Current: {current_filing['period']} (filed {current_filing['filing_date']}) ===")
     current_holdings = parse_13f_xml(current_filing["accession"])
+
+    if not current_holdings:
+        print("[ERROR] No holdings parsed from current filing")
+        sys.exit(1)
+
     ticker_map = cusip_to_ticker_lookup(current_holdings)
     current_top50, total_value, total_positions = build_top50(current_holdings, ticker_map)
 
@@ -300,13 +397,14 @@ def main():
         prev_filing = filings[1]
         print(f"\n[INFO] === Previous: {prev_filing['period']} (filed {prev_filing['filing_date']}) ===")
         prev_holdings = parse_13f_xml(prev_filing["accession"])
-        prev_ticker_map = cusip_to_ticker_lookup(prev_holdings)
-        prev_top50, prev_total, _ = build_top50(prev_holdings, prev_ticker_map)
-        prev_all_holdings = prev_top50
+        if prev_holdings:
+            prev_ticker_map = cusip_to_ticker_lookup(prev_holdings)
+            prev_top50, prev_total, _ = build_top50(prev_holdings, prev_ticker_map)
+            prev_all_holdings = prev_top50
 
-        # 변동 계산
-        current_top50 = compute_changes(current_top50, prev_top50)
-        sold_positions = find_sold_positions(current_top50, prev_top50)
+            # 변동 계산
+            current_top50 = compute_changes(current_top50, prev_top50)
+            sold_positions = find_sold_positions(current_top50, prev_top50)
 
     # 3. JSON 저장 — holdings_current.json
     current_data = {
@@ -322,7 +420,7 @@ def main():
 
     with open(os.path.join(OUTPUT_DIR, "holdings_current.json"), "w", encoding="utf-8") as f:
         json.dump(current_data, f, ensure_ascii=False, indent=2)
-    print(f"\n[OK] Saved holdings_current.json ({len(current_top50)} positions)")
+    print(f"\n[OK] Saved holdings_current.json ({len(current_top50)} positions, total ${total_value:,.0f})")
 
     # 4. JSON 저장 — holdings_prev.json
     if prev_top50:
