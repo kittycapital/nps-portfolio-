@@ -1,0 +1,10 @@
+[
+  {"period": "2023-12-31", "filing_date": "2024-02-14", "total_value": 62450000000, "total_positions": 412, "top50_value": 46200000000},
+  {"period": "2024-03-31", "filing_date": "2024-05-15", "total_value": 68120000000, "total_positions": 428, "top50_value": 50800000000},
+  {"period": "2024-06-30", "filing_date": "2024-08-14", "total_value": 72380000000, "total_positions": 445, "top50_value": 54100000000},
+  {"period": "2024-09-30", "filing_date": "2024-11-14", "total_value": 78940000000, "total_positions": 461, "top50_value": 58900000000},
+  {"period": "2024-12-31", "filing_date": "2025-02-14", "total_value": 82150000000, "total_positions": 470, "top50_value": 61400000000},
+  {"period": "2025-03-31", "filing_date": "2025-05-15", "total_value": 85670000000, "total_positions": 478, "top50_value": 64100000000},
+  {"period": "2025-06-30", "filing_date": "2025-08-14", "total_value": 87920000000, "total_positions": 483, "top50_value": 65800000000},
+  {"period": "2025-09-30", "filing_date": "2025-11-14", "total_value": 91247835000, "total_positions": 487, "top50_value": 68219640000}
+]
