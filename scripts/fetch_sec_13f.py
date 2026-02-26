@@ -53,7 +53,6 @@ def sec_request(url: str) -> bytes:
     try:
         resp = urlopen(req, timeout=30)
         raw = resp.read()
-        # SEC 서버가 항상 gzip으로 응답할 수 있으므로 해제 시도
         try:
             raw = gzip.decompress(raw)
         except Exception:
@@ -128,17 +127,12 @@ def parse_13f_xml(accession: str) -> list:
         print(f"[INFO] Trying HTML index: {index_htm_url}")
         try:
             html_data = sec_request(index_htm_url).decode("utf-8", errors="replace")
-            # HTML에서 infotable XML 링크 찾기
-            matches = re.findall(r'href="([^"]*infotable[^"]*\.xml)"', html_data, re.IGNORECASE)
-            if matches:
-                xml_url = f"{filing_base}/{matches[0]}"
-            else:
-                # infotable이 없으면 아무 XML이라도 찾기 (primary_doc 제외)
-                xml_matches = re.findall(r'href="([^"]*\.xml)"', html_data, re.IGNORECASE)
-                for m in xml_matches:
-                    if "primary" not in m.lower() and "R" not in m:
-                        xml_url = f"{filing_base}/{m}"
-                        break
+            xml_matches = re.findall(r'href="([^"]*\.xml)"', html_data, re.IGNORECASE)
+            for m in xml_matches:
+                fname = m.split("/")[-1]  # 경로에서 파일명만 추출
+                if "primary" not in fname.lower() and fname.lower() != "r.xml":
+                    xml_url = f"{filing_base}/{fname}"
+                    break
         except Exception as e:
             print(f"[WARN] HTML index failed: {e}")
 
