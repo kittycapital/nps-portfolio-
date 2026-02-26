@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>국민연금 기금운용 & 한국 주식 포트폴리오 | NPS Korea</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg-primary: #0a0e17;
+    --bg-secondary: #111827;
+    --bg-card: #151d2e;
+    --bg-card-hover: #1a2340;
+    --border: #1e2a42;
+    --border-accent: #2a3a5c;
+    --text-primary: #e8ecf4;
+    --text-secondary: #8896b0;
+    --text-muted: #5a6a84;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-green: #10b981;
+    --accent-red: #ef4444;
+    --accent-yellow: #f59e0b;
+    --accent-purple: #8b5cf6;
+    --accent-orange: #f97316;
+    --accent-pink: #ec4899;
+    --font-sans: 'Noto Sans KR', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+  /* Header */
+  .header { margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .header-top { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .flag { font-size: 28px; }
+  .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+  .header h1 span { font-weight: 400; color: var(--text-secondary); font-size: 15px; margin-left: 8px; }
+  .header-meta { font-size: 13px; color: var(--text-muted); font-family: var(--font-mono); margin-top: 4px; }
+  .header-meta .hl { color: var(--accent-cyan); }
+
+  /* Summary Cards */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 28px; }
+  .summary-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; transition: border-color 0.2s; }
+  .summary-card:hover { border-color: var(--border-accent); }
+  .summary-card .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .summary-card .value { font-family: var(--font-mono); font-size: 24px; font-weight: 600; }
+  .summary-card .sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+  /* Section */
+  .section { margin-bottom: 32px; }
+  .section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+  /* Ratio Bar */
+  .ratio-bar-wrap { margin-bottom: 28px; }
+  .ratio-bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+  .ratio-bar-label .domestic { color: var(--accent-blue); font-weight: 600; }
+  .ratio-bar-label .foreign { color: var(--accent-cyan); font-weight: 600; }
+  .ratio-bar { height: 14px; border-radius: 7px; overflow: hidden; display: flex; background: var(--bg-secondary); }
+  .ratio-bar .dom { background: linear-gradient(90deg, #3b82f6, #6366f1); border-radius: 7px 0 0 7px; transition: width 0.6s; }
+  .ratio-bar .for { background: linear-gradient(90deg, #06b6d4, #10b981); border-radius: 0 7px 7px 0; transition: width 0.6s; }
+
+  /* Charts */
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+  .chart-container { position: relative; height: 270px; }
+  .chart-container.tall { height: 300px; }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-card); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    position: sticky; top: 0; background: var(--bg-secondary); color: var(--text-muted);
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  thead th.right, td.right { text-align: right; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg-card-hover); }
+  td { padding: 10px 14px; white-space: nowrap; }
+  .name-cell-kr { font-weight: 600; color: var(--text-primary); }
+  .code-cell { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+  .sector-badge {
+    display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 4px;
+    background: rgba(59,130,246,0.1); color: var(--accent-blue); font-weight: 500;
+  }
+  .pct-bar {
+    display: inline-block; height: 6px; border-radius: 3px; vertical-align: middle;
+    margin-right: 6px; opacity: 0.8;
+  }
+  .mono { font-family: var(--font-mono); font-size: 12px; }
+
+  /* Returns Card */
+  .returns-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .return-item {
+    background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px;
+  }
+  .return-item .asset-name { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .return-item .ret-value { font-family: var(--font-mono); font-size: 20px; font-weight: 600; }
+  .return-item .alpha { font-family: var(--font-mono); font-size: 11px; margin-top: 3px; }
+  .alpha.pos { color: var(--accent-green); }
+  .alpha.neg { color: var(--accent-red); }
+
+  /* Footer */
+  .footer {
+    margin-top: 36px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.8;
+  }
+  .footer a { color: var(--accent-blue); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  /* Loading */
+  .loading { display: flex; align-items: center; justify-content: center; height: 200px; color: var(--text-muted); }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent-cyan); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .container { padding: 16px 14px; }
+    .header h1 { font-size: 18px; }
+    .header h1 span { display: block; margin-left: 0; }
+    .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .summary-card .value { font-size: 20px; }
+    .charts-grid { grid-template-columns: 1fr; }
+    .chart-container { height: 220px; }
+    .returns-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .code-cell { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="container" id="app">
+  <div class="loading" id="loader">
+    <div class="spinner"></div> 데이터 로드 중...
+  </div>
+</div>
+<script>
+const DATA_BASE = './data/';
+
+const ALLOC_COLORS = {
+  domestic_stock: '#3b82f6',
+  foreign_stock: '#06b6d4',
+  domestic_bond: '#8b5cf6',
+  foreign_bond: '#a78bfa',
+  alternative: '#f59e0b',
+  short_term: '#64748b',
+};
+const ALLOC_LABELS = {
+  domestic_stock: '국내주식',
+  foreign_stock: '해외주식',
+  domestic_bond: '국내채권',
+  foreign_bond: '해외채권',
+  alternative: '대체투자',
+  short_term: '단기자금',
+};
+const SECTOR_COLORS_KR = {
+  '반도체': '#3b82f6', '배터리': '#10b981', '바이오': '#ec4899', '자동차': '#f59e0b',
+  '금융': '#8b5cf6', '철강': '#64748b', '화학': '#f97316', 'IT': '#06b6d4',
+  '지주': '#a78bfa', '자동차부품': '#fbbf24', '보험': '#34d399', '에너지': '#ef4444',
+};
+
+function fmtT(n) { return n.toFixed(1) + '조'; }
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+function fmtShares(n) {
+  if (n >= 1e8) return (n / 1e8).toFixed(1) + '억';
+  if (n >= 1e4) return (n / 1e4).toFixed(0) + '만';
+  return n.toLocaleString();
+}
+
+async function loadJSON(file) {
+  const resp = await fetch(DATA_BASE + file);
+  if (!resp.ok) throw new Error('Failed: ' + file);
+  return resp.json();
+}
+
+async function init() {
+  try {
+    const [alloc, holdings] = await Promise.all([
+      loadJSON('asset_allocation.json'),
+      loadJSON('major_holdings.json'),
+    ]);
+    render(alloc, holdings);
+  } catch (e) {
+    document.getElementById('loader').innerHTML =
+      '<span style="color:var(--accent-red)">데이터 로드 실패: ' + e.message + '</span>';
+  }
+}
+
+function render(alloc, holdings) {
+  const app = document.getElementById('app');
+  const ret = alloc.returns.ytd;
+  const allocKeys = Object.keys(alloc.allocation);
+
+  // Sector distribution from holdings
+  const sectorMap = {};
+  holdings.holdings.forEach(h => {
+    sectorMap[h.sector] = (sectorMap[h.sector] || 0) + 1;
+  });
+  const sectorEntries = Object.entries(sectorMap).sort((a, b) => b[1] - a[1]);
+
+  app.innerHTML = `
+    <!-- Header -->
+    <div class="header">
+      <div class="header-top">
+        <span class="flag">🇰🇷</span>
+        <h1>국민연금 기금운용 & 한국 주식 <span>NPS Fund Overview</span></h1>
+      </div>
+      <div class="header-meta">
+        기준: <span class="hl">${alloc.period}</span> &nbsp;|&nbsp;
+        국민연금기금운용본부 &nbsp;|&nbsp;
+        공공데이터포털 · DART
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="label">총 적립금</div>
+        <div class="value">${fmtT(alloc.total_fund)}</div>
+        <div class="sub">원</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">국내주식</div>
+        <div class="value" style="color:var(--accent-blue)">${fmtT(alloc.allocation.domestic_stock.amount)}</div>
+        <div class="sub">전체 ${fmtPct(alloc.allocation.domestic_stock.weight)}</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">해외주식</div>
+        <div class="value" style="color:var(--accent-cyan)">${fmtT(alloc.allocation.foreign_stock.amount)}</div>
+        <div class="sub">전체 ${fmtPct(alloc.allocation.foreign_stock.weight)}</div>
+      </div>
+      <div class="summary-card">
+        <div class="label">누적 운용수익금</div>
+        <div class="value" style="color:var(--accent-green)">${fmtT(alloc.cumulative_return)}</div>
+        <div class="sub">1988년 이후 누적</div>
+      </div>
+    </div>
+
+    <!-- Domestic vs Foreign Ratio -->
+    <div class="ratio-bar-wrap">
+      <div class="ratio-bar-label">
+        <span class="domestic">🏠 국내 ${fmtPct(alloc.domestic_ratio)}</span>
+        <span class="foreign">🌍 해외 ${fmtPct(alloc.foreign_ratio)}</span>
+      </div>
+      <div class="ratio-bar">
+        <div class="dom" style="width:${alloc.domestic_ratio}%"></div>
+        <div class="for" style="width:${alloc.foreign_ratio}%"></div>
+      </div>
+    </div>
+
+    <!-- Charts Row 1: Allocation Donut + Stacked Area -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>🎯 자산배분 현황</h3>
+        <div class="chart-container"><canvas id="allocChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>📊 월별 자산배분 추이</h3>
+        <div class="chart-container"><canvas id="stackedChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Fund Growth Chart -->
+    <div class="charts-grid">
+      <div class="chart-card full">
+        <h3>📈 기금 적립금 성장 추이 (연간)</h3>
+        <div class="chart-container" style="height:240px;"><canvas id="growthChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Returns Section -->
+    <div class="section">
+      <div class="section-title">⚡ 자산군별 수익률 (YTD)</div>
+      <div class="returns-grid">
+        ${Object.entries(ret).map(([key, r]) => {
+          const label = ALLOC_LABELS[key] || key;
+          const color = r.return >= 10 ? 'var(--accent-green)' : r.return >= 5 ? 'var(--accent-cyan)' : 'var(--accent-blue)';
+          return `<div class="return-item">
+            <div class="asset-name">${label}</div>
+            <div class="ret-value" style="color:${color}">+${fmtPct(r.return)}</div>
+            <div class="alpha ${r.alpha >= 0 ? 'pos' : 'neg'}">
+              α ${r.alpha >= 0 ? '+' : ''}${fmtPct(r.alpha)} vs BM
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- Major Holdings Table -->
+    <div class="section">
+      <div class="section-title">📋 국내 대량보유 종목 (지분율 5% 이상)</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>종목명</th>
+              <th>종목코드</th>
+              <th>섹터</th>
+              <th class="right">보유주식 수</th>
+              <th class="right">지분율</th>
+              <th>보고일</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${holdings.holdings
+              .sort((a, b) => b.ownership_pct - a.ownership_pct)
+              .map((h, i) => {
+                const barW = Math.max(3, h.ownership_pct * 8);
+                const barColor = SECTOR_COLORS_KR[h.sector] || '#3b82f6';
+                return `<tr>
+                  <td class="mono" style="color:var(--text-muted)">${i + 1}</td>
+                  <td class="name-cell-kr">${h.name}</td>
+                  <td class="code-cell">${h.code}</td>
+                  <td><span class="sector-badge" style="background:${barColor}18;color:${barColor}">${h.sector}</span></td>
+                  <td class="mono right">${fmtShares(h.shares)}</td>
+                  <td class="mono right">
+                    <span class="pct-bar" style="width:${barW}px;background:${barColor}"></span>${fmtPct(h.ownership_pct)}
+                  </td>
+                  <td class="mono" style="color:var(--text-muted)">${h.report_date}</td>
+                </tr>`;
+              }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:8px;padding-left:4px;">
+        * 총 ${holdings.total_count}개 종목 중 상위 ${holdings.holdings.length}개 표시 · 지분율 5% 이상 대량보유 보고 기준
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      데이터 출처:
+      <a href="https://fund.nps.or.kr" target="_blank">국민연금기금운용본부</a> ·
+      <a href="https://www.data.go.kr" target="_blank">공공데이터포털</a> ·
+      <a href="https://dart.fss.or.kr" target="_blank">DART 전자공시</a><br>
+      본 대시보드는 정보 제공 목적이며, 투자 권유가 아닙니다.<br>
+      © HerdVibe · 마지막 업데이트: ${alloc.updated_at ? new Date(alloc.updated_at).toLocaleDateString('ko-KR') : '—'}
+    </div>
+  `;
+
+  // ─── Allocation Donut ───
+  const allocCtx = document.getElementById('allocChart').getContext('2d');
+  new Chart(allocCtx, {
+    type: 'doughnut',
+    data: {
+      labels: allocKeys.map(k => ALLOC_LABELS[k]),
+      datasets: [{
+        data: allocKeys.map(k => alloc.allocation[k].amount),
+        backgroundColor: allocKeys.map(k => ALLOC_COLORS[k]),
+        borderWidth: 0, hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#8896b0', font: { family: "'Noto Sans KR'", size: 11 }, padding: 10, boxWidth: 12, boxHeight: 12, borderRadius: 3, useBorderRadius: true }
+        },
+        tooltip: {
+          backgroundColor: '#1a2340', titleFont: { family: "'Noto Sans KR'" },
+          bodyFont: { family: "'JetBrains Mono'", size: 12 },
+          borderColor: '#2a3a5c', borderWidth: 1,
+          callbacks: { label: ctx => ` ${ctx.raw}조 원 (${(ctx.raw / alloc.total_fund * 100).toFixed(1)}%)` }
+        }
+      }
+    }
+  });
+
+  // ─── Stacked Area ───
+  const stackCtx = document.getElementById('stackedChart').getContext('2d');
+  const months = alloc.monthly_history;
+  const stackKeys = ['foreign_stock', 'domestic_stock', 'domestic_bond', 'foreign_bond', 'alternative', 'short_term'];
+  new Chart(stackCtx, {
+    type: 'line',
+    data: {
+      labels: months.map(m => m.month.slice(2)),
+      datasets: stackKeys.map(k => ({
+        label: ALLOC_LABELS[k],
+        data: months.map(m => m[k]),
+        backgroundColor: ALLOC_COLORS[k] + '40',
+        borderColor: ALLOC_COLORS[k],
+        borderWidth: 1.5,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: '#8896b0', font: { family: "'Noto Sans KR'", size: 10 }, boxWidth: 12, boxHeight: 3, padding: 8 }
+        },
+        tooltip: {
+          backgroundColor: '#1a2340', titleFont: { family: "'Noto Sans KR'" },
+          bodyFont: { family: "'JetBrains Mono'", size: 11 },
+          borderColor: '#2a3a5c', borderWidth: 1,
+          callbacks: { label: ctx => ` ${ALLOC_LABELS[stackKeys[ctx.datasetIndex]]}: ${ctx.raw}조` }
+        }
+      },
+      scales: {
+        x: { stacked: true, ticks: { color: '#5a6a84', font: { family: "'JetBrains Mono'", size: 9 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: { stacked: true, ticks: { color: '#5a6a84', font: { family: "'JetBrains Mono'", size: 10 }, callback: v => v + '조' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+
+  // ─── Growth Bar Chart ───
+  const growCtx = document.getElementById('growthChart').getContext('2d');
+  const yearly = alloc.yearly_total;
+  new Chart(growCtx, {
+    type: 'bar',
+    data: {
+      labels: yearly.map(y => y.year),
+      datasets: [{
+        label: '적립금',
+        data: yearly.map(y => y.total),
+        backgroundColor: yearly.map((y, i) => i === yearly.length - 1 ? 'rgba(6,182,212,0.8)' : 'rgba(59,130,246,0.5)'),
+        borderRadius: 4,
+        barThickness: 40,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1a2340',
+          bodyFont: { family: "'JetBrains Mono'", size: 12 },
+          borderColor: '#2a3a5c', borderWidth: 1,
+          callbacks: { label: ctx => ` ${ctx.raw}조 원` }
+        }
+      },
+      scales: {
+        x: { ticks: { color: '#5a6a84', font: { family: "'JetBrains Mono'", size: 11 } }, grid: { display: false } },
+        y: { ticks: { color: '#5a6a84', font: { family: "'JetBrains Mono'", size: 10 }, callback: v => v + '조' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
