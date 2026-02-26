@@ -52,18 +52,18 @@ def sec_request(url: str) -> bytes:
     req = Request(url, headers={"User-Agent": USER_AGENT})
     try:
         resp = urlopen(req, timeout=30)
-        data = resp.read()
-        # SEC 서버가 gzip으로 응답할 수 있으므로 항상 해제 시도
+        raw = resp.read()
+        # SEC 서버가 항상 gzip으로 응답할 수 있으므로 해제 시도
         try:
-            data = gzip.decompress(data)
-        except (OSError, Exception):
-            pass  # gzip이 아니면 원본 데이터 그대로 사용
-        return data
+            raw = gzip.decompress(raw)
+        except Exception:
+            pass
+        return raw
     except HTTPError as e:
         print(f"[ERROR] HTTP {e.code} for {url}")
         raise
     finally:
-        time.sleep(0.15)  # SEC rate limit: ~10 req/sec
+        time.sleep(0.15)
 
 
 def get_13f_filings() -> list:
@@ -90,7 +90,6 @@ def get_13f_filings() -> list:
                 "period": periods[i],
             })
 
-    # 최신순 정렬
     filings.sort(key=lambda x: x["period"], reverse=True)
     print(f"[INFO] Found {len(filings)} 13F filings")
     return filings
@@ -100,7 +99,6 @@ def parse_13f_xml(accession: str) -> list:
     """13F filing의 information table XML 파싱"""
     acc_no_dash = accession.replace("-", "")
     cik_num = NPS_CIK.lstrip('0')
-    # Filing index 페이지에서 infotable XML 찾기
     index_url = f"{BASE_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}/index.json"
     print(f"[INFO] Fetching filing index: {index_url}")
 
@@ -110,7 +108,6 @@ def parse_13f_xml(accession: str) -> list:
         print(f"[WARN] Could not fetch index: {e}")
         return []
 
-    # infotable 파일 찾기
     xml_url = None
     for item in index_data.get("directory", {}).get("item", []):
         name = item.get("name", "").lower()
@@ -119,7 +116,6 @@ def parse_13f_xml(accession: str) -> list:
             break
 
     if not xml_url:
-        # primary doc이 XML인 경우도 있음
         for item in index_data.get("directory", {}).get("item", []):
             name = item.get("name", "").lower()
             if name.endswith(".xml") and "primary" not in name:
@@ -133,14 +129,11 @@ def parse_13f_xml(accession: str) -> list:
     print(f"[INFO] Parsing infotable: {xml_url}")
     xml_data = sec_request(xml_url)
 
-    # XML 파싱 - 여러 네임스페이스 시도
     root = ET.fromstring(xml_data)
 
-    # 네임스페이스 자동 감지
     ns_match = re.match(r'\{(.+?)\}', root.tag)
     default_ns = ns_match.group(1) if ns_match else ""
 
-    # infoTable 태그 찾기 (네임스페이스 유무 모두 대응)
     holdings = []
     info_tables = []
 
@@ -148,11 +141,9 @@ def parse_13f_xml(accession: str) -> list:
         info_tables = root.findall(f".//{{{default_ns}}}infoTable")
 
     if not info_tables:
-        # 네임스페이스 없이 시도
         info_tables = root.findall(".//infoTable")
 
     if not info_tables:
-        # 모든 하위 요소에서 찾기
         for elem in root.iter():
             if elem.tag.lower().endswith("infotable"):
                 info_tables.append(elem)
@@ -160,24 +151,19 @@ def parse_13f_xml(accession: str) -> list:
     print(f"[INFO] Found {len(info_tables)} infoTable entries")
 
     for info in info_tables:
-        # 태그 이름에서 네임스페이스 추출
         tag_ns = ""
         ns_m = re.match(r'\{(.+?)\}', info.tag)
         if ns_m:
             tag_ns = ns_m.group(1)
 
         def find_text(parent, tag, default=""):
-            """네임스페이스 유무 모두 대응하는 텍스트 추출"""
-            # 네임스페이스 포함 시도
             if tag_ns:
                 elem = parent.find(f"{{{tag_ns}}}{tag}")
                 if elem is not None and elem.text:
                     return elem.text.strip()
-            # 네임스페이스 없이 시도
             elem = parent.find(tag)
             if elem is not None and elem.text:
                 return elem.text.strip()
-            # 대소문자 무시 검색
             for child in parent:
                 local = child.tag.split("}")[-1] if "}" in child.tag else child.tag
                 if local.lower() == tag.lower():
@@ -185,7 +171,6 @@ def parse_13f_xml(accession: str) -> list:
             return default
 
         def find_nested_text(parent, path, default=""):
-            """중첩된 태그에서 텍스트 추출 (예: shrsOrPrnAmt/sshPrnamt)"""
             parts = path.split("/")
             current = parent
             for part in parts:
@@ -195,7 +180,6 @@ def parse_13f_xml(accession: str) -> list:
                 if found is None:
                     found = current.find(part)
                 if found is None:
-                    # 대소문자 무시
                     for child in current:
                         local = child.tag.split("}")[-1] if "}" in child.tag else child.tag
                         if local.lower() == part.lower():
@@ -214,7 +198,7 @@ def parse_13f_xml(accession: str) -> list:
         share_type = find_nested_text(info, "shrsOrPrnAmt/sshPrnamtType", "SH")
 
         try:
-            value = int(value_str) * 1000  # 13F value는 천 달러 단위
+            value = int(value_str) * 1000
         except (ValueError, TypeError):
             value = 0
         try:
@@ -222,7 +206,7 @@ def parse_13f_xml(accession: str) -> list:
         except (ValueError, TypeError):
             shares = 0
 
-        if name:  # 이름이 있는 항목만 추가
+        if name:
             holdings.append({
                 "name": name,
                 "title": title,
@@ -237,10 +221,6 @@ def parse_13f_xml(accession: str) -> list:
 
 
 def cusip_to_ticker_lookup(holdings: list) -> dict:
-    """
-    CUSIP → 티커 매핑 (이름 기반 매핑)
-    실제 운영 시 OpenFIGI API (무료) 활용 권장
-    """
     name_ticker = {
         "APPLE INC": "AAPL", "MICROSOFT CORP": "MSFT", "NVIDIA CORP": "NVDA",
         "AMAZON COM INC": "AMZN", "AMAZON.COM INC": "AMZN",
@@ -290,11 +270,9 @@ def cusip_to_ticker_lookup(holdings: list) -> dict:
 
 
 def build_top50(holdings: list, ticker_map: dict) -> list:
-    """보유금액 기준 Top 50 종목 추출"""
-    # 같은 종목 합산 (여러 클래스 보유 가능)
     merged = {}
     for h in holdings:
-        cusip6 = h["cusip"][:6]  # 같은 회사는 CUSIP 앞 6자리 동일
+        cusip6 = h["cusip"][:6]
         if cusip6 in merged:
             merged[cusip6]["value"] += h["value"]
             merged[cusip6]["shares"] += h["shares"]
@@ -306,7 +284,6 @@ def build_top50(holdings: list, ticker_map: dict) -> list:
                 "shares": h["shares"],
             }
 
-    # 정렬
     sorted_holdings = sorted(merged.values(), key=lambda x: x["value"], reverse=True)
     total_value = sum(h["value"] for h in sorted_holdings)
 
@@ -329,7 +306,6 @@ def build_top50(holdings: list, ticker_map: dict) -> list:
 
 
 def compute_changes(current: list, previous: list) -> list:
-    """현재 vs 이전 분기 비교하여 변동 계산"""
     prev_map = {h["cusip"][:6]: h for h in previous}
 
     for h in current:
@@ -356,7 +332,6 @@ def compute_changes(current: list, previous: list) -> list:
 
 
 def find_sold_positions(current: list, prev_all: list) -> list:
-    """이전 분기에 있었지만 현재 없는 종목 (완전 매도)"""
     current_cusips = {h["cusip"][:6] for h in current}
     sold = []
     for h in prev_all:
@@ -373,13 +348,11 @@ def find_sold_positions(current: list, prev_all: list) -> list:
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    # 1. Filing 목록 조회
     filings = get_13f_filings()
     if len(filings) < 1:
         print("[ERROR] No 13F filings found")
         sys.exit(1)
 
-    # 2. 최신 + 직전 분기 파싱
     current_filing = filings[0]
     print(f"\n[INFO] === Current: {current_filing['period']} (filed {current_filing['filing_date']}) ===")
     current_holdings = parse_13f_xml(current_filing["accession"])
@@ -404,11 +377,9 @@ def main():
             prev_top50, prev_total, _ = build_top50(prev_holdings, prev_ticker_map)
             prev_all_holdings = prev_top50
 
-            # 변동 계산
             current_top50 = compute_changes(current_top50, prev_top50)
             sold_positions = find_sold_positions(current_top50, prev_top50)
 
-    # 3. JSON 저장 — holdings_current.json
     current_data = {
         "filing_date": current_filing["filing_date"],
         "period": current_filing["period"],
@@ -424,7 +395,6 @@ def main():
         json.dump(current_data, f, ensure_ascii=False, indent=2)
     print(f"\n[OK] Saved holdings_current.json ({len(current_top50)} positions, total ${total_value:,.0f})")
 
-    # 4. JSON 저장 — holdings_prev.json
     if prev_top50:
         prev_data = {
             "filing_date": filings[1]["filing_date"],
@@ -436,7 +406,6 @@ def main():
             json.dump(prev_data, f, ensure_ascii=False, indent=2)
         print(f"[OK] Saved holdings_prev.json")
 
-    # 5. 히스토리 업데이트 — holdings_history.json
     history_path = os.path.join(OUTPUT_DIR, "holdings_history.json")
     if os.path.exists(history_path):
         with open(history_path, "r", encoding="utf-8") as f:
@@ -444,7 +413,6 @@ def main():
     else:
         history = []
 
-    # 중복 방지
     existing_periods = {h["period"] for h in history}
     if current_filing["period"] not in existing_periods:
         history.append({
