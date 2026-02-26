@@ -24,6 +24,10 @@ ALT_URL = "https://www.sec.gov"
 USER_AGENT = os.environ.get("SEC_USER_AGENT", "NPS-Portfolio-Tracker admin@example.com")
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "us", "data")
 
+# NPS 미국 주식 포트폴리오 합리적 범위 (달러)
+# $1B ~ $500B 사이가 정상, $1T 이상이면 *1000 오류
+SANITY_MAX = 1_000_000_000_000  # $1 trillion
+
 # 섹터 매핑 (티커 기반)
 SECTOR_MAP = {
     "AAPL": "Information Technology", "MSFT": "Information Technology",
@@ -60,7 +64,6 @@ def sec_request(url: str) -> bytes:
             pass
         return raw
     except HTTPError as e:
-        print(f"[ERROR] HTTP {e.code} for {url}")
         raise
     finally:
         time.sleep(0.15)
@@ -73,7 +76,7 @@ def sec_request_with_fallback(url: str) -> bytes:
     except HTTPError:
         if "data.sec.gov" in url:
             alt = url.replace("data.sec.gov", "www.sec.gov")
-            print(f"[INFO] Retrying with www.sec.gov: {alt}")
+            print(f"[INFO] Fallback to www.sec.gov")
             return sec_request(alt)
         raise
 
@@ -112,13 +115,12 @@ def parse_13f_xml(accession: str) -> list:
     acc_no_dash = accession.replace("-", "")
     cik_num = NPS_CIK.lstrip('0')
     filing_base = f"{BASE_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}"
-    filing_base_alt = f"{ALT_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}"
 
     xml_url = None
 
     # 방법 1: index.json 시도
     index_url = f"{filing_base}/index.json"
-    print(f"[INFO] Trying index.json: {index_url}")
+    print(f"[INFO] Trying index.json...")
     try:
         index_data = json.loads(sec_request(index_url))
         for item in index_data.get("directory", {}).get("item", []):
@@ -132,13 +134,12 @@ def parse_13f_xml(accession: str) -> list:
                 if name.endswith(".xml") and "primary" not in name:
                     xml_url = f"{filing_base}/{item['name']}"
                     break
-    except Exception as e:
-        print(f"[WARN] index.json failed: {e}")
+    except Exception:
+        print(f"[INFO] index.json not available, trying HTML index...")
 
-    # 방법 2: index.json 실패 시 HTML index 페이지 파싱
+    # 방법 2: HTML index 페이지 파싱
     if not xml_url:
         index_htm_url = f"{ALT_URL}/Archives/edgar/data/{cik_num}/{acc_no_dash}/"
-        print(f"[INFO] Trying HTML index: {index_htm_url}")
         try:
             html_data = sec_request(index_htm_url).decode("utf-8", errors="replace")
             xml_matches = re.findall(r'href="([^"]*\.xml)"', html_data, re.IGNORECASE)
@@ -146,16 +147,16 @@ def parse_13f_xml(accession: str) -> list:
                 fname = m.split("/")[-1]
                 if "primary" not in fname.lower() and fname.lower() != "r.xml":
                     xml_url = f"{filing_base}/{fname}"
+                    print(f"[INFO] Found XML from HTML index: {fname}")
                     break
-        except Exception as e:
-            print(f"[WARN] HTML index failed: {e}")
+        except Exception:
+            print(f"[WARN] HTML index also failed")
 
     # 방법 3: 일반적인 파일명 직접 시도
     if not xml_url:
         common_names = ["infotable.xml", "INFOTABLE.XML", "InfoTable.xml"]
         for fname in common_names:
             test_url = f"{filing_base}/{fname}"
-            print(f"[INFO] Trying direct: {test_url}")
             try:
                 test_data = sec_request(test_url)
                 if test_data and len(test_data) > 100:
@@ -165,15 +166,15 @@ def parse_13f_xml(accession: str) -> list:
                 continue
 
     if not xml_url:
-        print("[WARN] Could not find infotable XML by any method")
+        print("[WARN] Could not find infotable XML")
         return []
 
     # XML 다운로드 (data.sec.gov 실패 시 www.sec.gov로 재시도)
-    print(f"[INFO] Parsing infotable: {xml_url}")
+    print(f"[INFO] Downloading infotable XML...")
     try:
         xml_data = sec_request_with_fallback(xml_url)
-    except Exception as e:
-        print(f"[WARN] Could not download XML: {e}")
+    except Exception:
+        print(f"[WARN] Could not download XML")
         return []
 
     root = ET.fromstring(xml_data)
@@ -245,7 +246,7 @@ def parse_13f_xml(accession: str) -> list:
         share_type = find_nested_text(info, "shrsOrPrnAmt/sshPrnamtType", "SH")
 
         try:
-            value = int(value_str) * 1000
+            value = int(value_str)
         except (ValueError, TypeError):
             value = 0
         try:
@@ -258,12 +259,30 @@ def parse_13f_xml(accession: str) -> list:
                 "name": name,
                 "title": title,
                 "cusip": cusip,
-                "value": value,
+                "value_raw": value,  # 원본 값 (천 달러 단위일 수 있음)
                 "shares": shares,
                 "share_type": share_type,
             })
 
-    print(f"[INFO] Parsed {len(holdings)} holdings")
+    # 13F value는 보통 천 달러(thousands) 단위
+    # 전체 합산 후 sanity check: $1T 넘으면 이미 달러 단위로 간주
+    raw_total = sum(h["value_raw"] for h in holdings)
+    raw_total_x1000 = raw_total * 1000
+
+    if raw_total_x1000 > SANITY_MAX:
+        # 값이 이미 달러 단위 (곱하면 비정상적으로 큼)
+        multiplier = 1
+        print(f"[INFO] Values appear to be in dollars (raw total: ${raw_total:,.0f})")
+    else:
+        # 표준 13F: 천 달러 단위 → 달러로 변환
+        multiplier = 1000
+        print(f"[INFO] Values in thousands, converting (raw total: ${raw_total:,} x1000)")
+
+    for h in holdings:
+        h["value"] = h["value_raw"] * multiplier
+        del h["value_raw"]
+
+    print(f"[INFO] Parsed {len(holdings)} holdings (total: ${sum(h['value'] for h in holdings):,.0f})")
     return holdings
 
 
@@ -425,10 +444,12 @@ def main():
     prev_top50 = []
     prev_all_holdings = []
     sold_positions = []
+    prev_total = 0
 
     # 현재 filing 이후의 filing에서 이전 분기 찾기
     current_idx = filings.index(current_filing)
     remaining = filings[current_idx + 1:]
+    prev_filing_used = None
     for f in remaining[:3]:
         print(f"\n[INFO] === Previous: {f['period']} (filed {f['filing_date']}) ===")
         prev_holdings = parse_13f_xml(f["accession"])
@@ -438,6 +459,7 @@ def main():
             prev_all_holdings = prev_top50
             current_top50 = compute_changes(current_top50, prev_top50)
             sold_positions = find_sold_positions(current_top50, prev_top50)
+            prev_filing_used = f
             break
         else:
             print(f"[WARN] Previous filing {f['period']} failed, trying next...")
@@ -457,11 +479,10 @@ def main():
         json.dump(current_data, f, ensure_ascii=False, indent=2)
     print(f"\n[OK] Saved holdings_current.json ({len(current_top50)} positions, total ${total_value:,.0f})")
 
-    if prev_top50:
-        prev_f = remaining[0] if remaining else filings[1]
+    if prev_top50 and prev_filing_used:
         prev_data = {
-            "filing_date": prev_f["filing_date"],
-            "period": prev_f["period"],
+            "filing_date": prev_filing_used["filing_date"],
+            "period": prev_filing_used["period"],
             "total_value": prev_total,
             "top50": prev_top50,
         }
