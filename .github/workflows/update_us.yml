@@ -1,0 +1,40 @@
+name: Update NPS US Holdings (13F)
+
+on:
+  schedule:
+    # 13F deadline: 분기 종료 후 45일 (2,5,8,11월 중순)
+    # 넉넉하게 16일에 실행
+    - cron: '0 9 16 2,5,8,11 *'
+  workflow_dispatch:  # 수동 실행 가능
+
+permissions:
+  contents: write
+
+jobs:
+  update-us:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Fetch SEC EDGAR 13F Data
+        env:
+          SEC_USER_AGENT: "NPS-Portfolio-Tracker ${{ secrets.CONTACT_EMAIL }}"
+        run: |
+          python scripts/fetch_sec_13f.py
+
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add us/data/*.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "📊 Update NPS US holdings $(date +%Y-%m-%d)"
+            git push
+          fi
