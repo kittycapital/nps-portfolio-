@@ -1,0 +1,507 @@
+{
+  "filing_date": "2025-11-04",
+  "period": "2025-09-30",
+  "total_value": 128772128947000,
+  "top50": [
+    {
+      "rank": 1,
+      "name": "NVIDIA CORPORATION",
+      "ticker": "NVDA",
+      "cusip": "67066G104",
+      "sector": "Information Technology",
+      "shares": 49553761,
+      "value": 9245740727000,
+      "weight": 7.18
+    },
+    {
+      "rank": 2,
+      "name": "APPLE INC",
+      "ticker": "AAPL",
+      "cusip": "037833100",
+      "sector": "Information Technology",
+      "shares": 29726955,
+      "value": 7569374552000,
+      "weight": 5.88
+    },
+    {
+      "rank": 3,
+      "name": "MICROSOFT CORP",
+      "ticker": "MSFT",
+      "cusip": "594918104",
+      "sector": "Information Technology",
+      "shares": 14288881,
+      "value": 7400925914000,
+      "weight": 5.75
+    },
+    {
+      "rank": 4,
+      "name": "ALPHABET INC",
+      "ticker": "GOOGL",
+      "cusip": "02079K107",
+      "sector": "Information Technology",
+      "shares": 22133573,
+      "value": 5385255196000,
+      "weight": 4.18
+    },
+    {
+      "rank": 5,
+      "name": "AMAZON COM INC",
+      "ticker": "AMZN",
+      "cusip": "023135106",
+      "sector": "Consumer Discretionary",
+      "shares": 18939183,
+      "value": 4158476411000,
+      "weight": 3.23
+    },
+    {
+      "rank": 6,
+      "name": "META PLATFORMS INC",
+      "ticker": "META",
+      "cusip": "30303M102",
+      "sector": "Communication Services",
+      "shares": 4470199,
+      "value": 3282824742000,
+      "weight": 2.55
+    },
+    {
+      "rank": 7,
+      "name": "INVESCO EXCH TRADED FD TR II",
+      "ticker": "",
+      "cusip": "46138E461",
+      "sector": "Other",
+      "shares": 47382366,
+      "value": 3176987640000,
+      "weight": 2.47
+    },
+    {
+      "rank": 8,
+      "name": "BROADCOM INC",
+      "ticker": "AVGO",
+      "cusip": "11135F101",
+      "sector": "Information Technology",
+      "shares": 8860165,
+      "value": 2923057035000,
+      "weight": 2.27
+    },
+    {
+      "rank": 9,
+      "name": "ISHARES TR",
+      "ticker": "",
+      "cusip": "464287200",
+      "sector": "Other",
+      "shares": 4119355,
+      "value": 2756878334000,
+      "weight": 2.14
+    },
+    {
+      "rank": 10,
+      "name": "TESLA INC",
+      "ticker": "TSLA",
+      "cusip": "88160R101",
+      "sector": "Consumer Discretionary",
+      "shares": 5681563,
+      "value": 2526704697000,
+      "weight": 1.96
+    },
+    {
+      "rank": 11,
+      "name": "JPMORGAN CHASE & CO.",
+      "ticker": "JPM",
+      "cusip": "46625H100",
+      "sector": "Financials",
+      "shares": 5450875,
+      "value": 1719369501000,
+      "weight": 1.34
+    },
+    {
+      "rank": 12,
+      "name": "BERKSHIRE HATHAWAY INC DEL",
+      "ticker": "BRK-B",
+      "cusip": "084670702",
+      "sector": "Financials",
+      "shares": 2547108,
+      "value": 1280533076000,
+      "weight": 0.99
+    },
+    {
+      "rank": 13,
+      "name": "T ROWE PRICE ETF INC",
+      "ticker": "",
+      "cusip": "87283Q305",
+      "sector": "Other",
+      "shares": 28090469,
+      "value": 1240486965000,
+      "weight": 0.96
+    },
+    {
+      "rank": 14,
+      "name": "ELI LILLY & CO",
+      "ticker": "LLY",
+      "cusip": "532457108",
+      "sector": "Health Care",
+      "shares": 1592232,
+      "value": 1214873016000,
+      "weight": 0.94
+    },
+    {
+      "rank": 15,
+      "name": "NETFLIX INC",
+      "ticker": "NFLX",
+      "cusip": "64110L106",
+      "sector": "Communication Services",
+      "shares": 927368,
+      "value": 1111840043000,
+      "weight": 0.86
+    },
+    {
+      "rank": 16,
+      "name": "VISA INC",
+      "ticker": "V",
+      "cusip": "92826C839",
+      "sector": "Financials",
+      "shares": 3233527,
+      "value": 1103861447000,
+      "weight": 0.86
+    },
+    {
+      "rank": 17,
+      "name": "EXXON MOBIL CORP",
+      "ticker": "XOM",
+      "cusip": "30231G102",
+      "sector": "Energy",
+      "shares": 9217615,
+      "value": 1039286091000,
+      "weight": 0.81
+    },
+    {
+      "rank": 18,
+      "name": "ORACLE CORP",
+      "ticker": "ORCL",
+      "cusip": "68389X105",
+      "sector": "Information Technology",
+      "shares": 3451215,
+      "value": 970619707000,
+      "weight": 0.75
+    },
+    {
+      "rank": 19,
+      "name": "WALMART INC",
+      "ticker": "WMT",
+      "cusip": "931142103",
+      "sector": "Consumer Staples",
+      "shares": 9160741,
+      "value": 944105967000,
+      "weight": 0.73
+    },
+    {
+      "rank": 20,
+      "name": "COSTCO WHSL CORP NEW",
+      "ticker": "",
+      "cusip": "22160K105",
+      "sector": "Other",
+      "shares": 997577,
+      "value": 923387199000,
+      "weight": 0.72
+    },
+    {
+      "rank": 21,
+      "name": "JOHNSON & JOHNSON",
+      "ticker": "JNJ",
+      "cusip": "478160104",
+      "sector": "Health Care",
+      "shares": 4926569,
+      "value": 913484424000,
+      "weight": 0.71
+    },
+    {
+      "rank": 22,
+      "name": "ABBVIE INC",
+      "ticker": "ABBV",
+      "cusip": "00287Y109",
+      "sector": "Health Care",
+      "shares": 3934720,
+      "value": 911045069000,
+      "weight": 0.71
+    },
+    {
+      "rank": 23,
+      "name": "MASTERCARD INCORPORATED",
+      "ticker": "MA",
+      "cusip": "57636Q104",
+      "sector": "Financials",
+      "shares": 1574341,
+      "value": 895500904000,
+      "weight": 0.7
+    },
+    {
+      "rank": 24,
+      "name": "HOME DEPOT INC",
+      "ticker": "HD",
+      "cusip": "437076102",
+      "sector": "Consumer Discretionary",
+      "shares": 2066276,
+      "value": 837234372000,
+      "weight": 0.65
+    },
+    {
+      "rank": 25,
+      "name": "PALANTIR TECHNOLOGIES INC",
+      "ticker": "",
+      "cusip": "69608A108",
+      "sector": "Other",
+      "shares": 4475175,
+      "value": 816361424000,
+      "weight": 0.63
+    },
+    {
+      "rank": 26,
+      "name": "PROCTER AND GAMBLE CO",
+      "ticker": "",
+      "cusip": "742718109",
+      "sector": "Other",
+      "shares": 5030147,
+      "value": 772882087000,
+      "weight": 0.6
+    },
+    {
+      "rank": 27,
+      "name": "GE AEROSPACE",
+      "ticker": "",
+      "cusip": "369604301",
+      "sector": "Other",
+      "shares": 2391681,
+      "value": 719465478000,
+      "weight": 0.56
+    },
+    {
+      "rank": 28,
+      "name": "BANK AMERICA CORP",
+      "ticker": "",
+      "cusip": "060505104",
+      "sector": "Other",
+      "shares": 13878478,
+      "value": 715990680000,
+      "weight": 0.56
+    },
+    {
+      "rank": 29,
+      "name": "UNITEDHEALTH GROUP INC",
+      "ticker": "UNH",
+      "cusip": "91324P102",
+      "sector": "Health Care",
+      "shares": 1876774,
+      "value": 648050062000,
+      "weight": 0.5
+    },
+    {
+      "rank": 30,
+      "name": "CISCO SYS INC",
+      "ticker": "",
+      "cusip": "17275R102",
+      "sector": "Other",
+      "shares": 9323224,
+      "value": 637894986000,
+      "weight": 0.5
+    },
+    {
+      "rank": 31,
+      "name": "INTERNATIONAL BUSINESS MACHS",
+      "ticker": "",
+      "cusip": "459200101",
+      "sector": "Other",
+      "shares": 2241113,
+      "value": 632352444000,
+      "weight": 0.49
+    },
+    {
+      "rank": 32,
+      "name": "PHILIP MORRIS INTL INC",
+      "ticker": "",
+      "cusip": "718172109",
+      "sector": "Other",
+      "shares": 3810514,
+      "value": 618065371000,
+      "weight": 0.48
+    },
+    {
+      "rank": 33,
+      "name": "CHEVRON CORP NEW",
+      "ticker": "CVX",
+      "cusip": "166764100",
+      "sector": "Energy",
+      "shares": 3940671,
+      "value": 611946800000,
+      "weight": 0.48
+    },
+    {
+      "rank": 34,
+      "name": "APPLOVIN CORP",
+      "ticker": "",
+      "cusip": "03831W108",
+      "sector": "Other",
+      "shares": 832426,
+      "value": 598131378000,
+      "weight": 0.46
+    },
+    {
+      "rank": 35,
+      "name": "COCA COLA CO",
+      "ticker": "KO",
+      "cusip": "191216100",
+      "sector": "Consumer Staples",
+      "shares": 8888237,
+      "value": 589467878000,
+      "weight": 0.46
+    },
+    {
+      "rank": 36,
+      "name": "HARBOR ETF TRUST",
+      "ticker": "",
+      "cusip": "41151J745",
+      "sector": "Other",
+      "shares": 24565625,
+      "value": 585865591000,
+      "weight": 0.45
+    },
+    {
+      "rank": 37,
+      "name": "WELLS FARGO CO NEW",
+      "ticker": "WFC",
+      "cusip": "949746101",
+      "sector": "Financials",
+      "shares": 6635396,
+      "value": 556178893000,
+      "weight": 0.43
+    },
+    {
+      "rank": 38,
+      "name": "ADVANCED MICRO DEVICES INC",
+      "ticker": "AMD",
+      "cusip": "007903107",
+      "sector": "Information Technology",
+      "shares": 3377037,
+      "value": 546370816000,
+      "weight": 0.42
+    },
+    {
+      "rank": 39,
+      "name": "GOLDMAN SACHS GROUP INC",
+      "ticker": "",
+      "cusip": "38141G104",
+      "sector": "Other",
+      "shares": 665794,
+      "value": 530205052000,
+      "weight": 0.41
+    },
+    {
+      "rank": 40,
+      "name": "SALESFORCE INC",
+      "ticker": "CRM",
+      "cusip": "79466L302",
+      "sector": "Information Technology",
+      "shares": 2207190,
+      "value": 523104030000,
+      "weight": 0.41
+    },
+    {
+      "rank": 41,
+      "name": "ADVISORS INNER CIRCLE FD",
+      "ticker": "",
+      "cusip": "0075W0155",
+      "sector": "Other",
+      "shares": 18162000,
+      "value": 511225792000,
+      "weight": 0.4
+    },
+    {
+      "rank": 42,
+      "name": "DISNEY WALT CO",
+      "ticker": "",
+      "cusip": "254687106",
+      "sector": "Other",
+      "shares": 4454425,
+      "value": 510031663000,
+      "weight": 0.4
+    },
+    {
+      "rank": 43,
+      "name": "CATERPILLAR INC",
+      "ticker": "CAT",
+      "cusip": "149123101",
+      "sector": "Other",
+      "shares": 1025256,
+      "value": 489200900000,
+      "weight": 0.38
+    },
+    {
+      "rank": 44,
+      "name": "MERCK & CO INC",
+      "ticker": "MRK",
+      "cusip": "58933Y105",
+      "sector": "Health Care",
+      "shares": 5707385,
+      "value": 479020823000,
+      "weight": 0.37
+    },
+    {
+      "rank": 45,
+      "name": "ABBOTT LABS",
+      "ticker": "",
+      "cusip": "002824100",
+      "sector": "Other",
+      "shares": 3565794,
+      "value": 477602448000,
+      "weight": 0.37
+    },
+    {
+      "rank": 46,
+      "name": "AT&T INC",
+      "ticker": "T",
+      "cusip": "00206R102",
+      "sector": "Communication Services",
+      "shares": 16902567,
+      "value": 477328492000,
+      "weight": 0.37
+    },
+    {
+      "rank": 47,
+      "name": "MICRON TECHNOLOGY INC",
+      "ticker": "",
+      "cusip": "595112103",
+      "sector": "Other",
+      "shares": 2815509,
+      "value": 471090966000,
+      "weight": 0.37
+    },
+    {
+      "rank": 48,
+      "name": "LAM RESEARCH CORP",
+      "ticker": "",
+      "cusip": "512807306",
+      "sector": "Other",
+      "shares": 3518046,
+      "value": 471066359000,
+      "weight": 0.37
+    },
+    {
+      "rank": 49,
+      "name": "RTX CORPORATION",
+      "ticker": "",
+      "cusip": "75513E101",
+      "sector": "Other",
+      "shares": 2808284,
+      "value": 469910162000,
+      "weight": 0.36
+    },
+    {
+      "rank": 50,
+      "name": "MCDONALDS CORP",
+      "ticker": "MCD",
+      "cusip": "580135101",
+      "sector": "Consumer Discretionary",
+      "shares": 1533015,
+      "value": 465867928000,
+      "weight": 0.36
+    }
+  ]
+}
