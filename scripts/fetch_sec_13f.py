@@ -464,6 +464,14 @@ def main():
         else:
             print(f"[WARN] Previous filing {f['period']} failed, trying next...")
 
+    # current 데이터 sanity check
+    if total_value > SANITY_MAX:
+        print(f"[FIX] Current total_value ${total_value:,} > $1T, dividing by 1000")
+        total_value = total_value // 1000
+        for h in current_top50:
+            h["value"] = h["value"] // 1000
+            h["weight"] = round(h["value"] / total_value * 100, 2) if total_value > 0 else 0
+
     current_data = {
         "filing_date": current_filing["filing_date"],
         "period": current_filing["period"],
@@ -540,6 +548,14 @@ def main():
             print(f"[WARN] History {f['period']}: error {e}, skipping")
 
     history.sort(key=lambda x: x["period"])
+
+    # 최종 sanity check: $1T 넘는 값은 1000으로 나누기
+    for entry in history:
+        if entry["total_value"] > SANITY_MAX:
+            old = entry["total_value"]
+            entry["total_value"] = entry["total_value"] // 1000
+            entry["top50_value"] = entry.get("top50_value", 0) // 1000
+            print(f"[FIX] History {entry['period']}: ${old:,} → ${entry['total_value']:,} (÷1000)")
 
     with open(history_path, "w", encoding="utf-8") as f:
         json.dump(history, f, ensure_ascii=False, indent=2)
