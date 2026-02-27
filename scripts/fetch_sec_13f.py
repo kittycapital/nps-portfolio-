@@ -490,27 +490,60 @@ def main():
             json.dump(prev_data, f, ensure_ascii=False, indent=2)
         print(f"[OK] Saved holdings_prev.json")
 
+    # ─── 히스토리: 전체 filing을 다시 파싱하여 정확한 값으로 빌드 ───
     history_path = os.path.join(OUTPUT_DIR, "holdings_history.json")
-    if os.path.exists(history_path):
-        with open(history_path, "r", encoding="utf-8") as f:
-            history = json.load(f)
-    else:
-        history = []
+    history = []
+    seen_periods = set()
 
-    existing_periods = {h["period"] for h in history}
-    if current_filing["period"] not in existing_periods:
-        history.append({
-            "period": current_filing["period"],
-            "filing_date": current_filing["filing_date"],
-            "total_value": total_value,
-            "total_positions": total_positions,
-            "top50_value": sum(h["value"] for h in current_top50),
-        })
-        history.sort(key=lambda x: x["period"])
+    # 현재 분기는 이미 파싱했으므로 바로 추가
+    history.append({
+        "period": current_filing["period"],
+        "filing_date": current_filing["filing_date"],
+        "total_value": total_value,
+        "total_positions": total_positions,
+        "top50_value": sum(h["value"] for h in current_top50),
+    })
+    seen_periods.add(current_filing["period"])
+
+    # 나머지 filing들도 파싱 (최대 12개 분기 = 3년)
+    for f in filings:
+        if f["period"] in seen_periods:
+            continue
+        if len(history) >= 12:
+            break
+        print(f"\n[INFO] === History: {f['period']} (filed {f['filing_date']}) ===")
+        try:
+            h_holdings = parse_13f_xml(f["accession"])
+            if h_holdings:
+                h_merged = {}
+                for h in h_holdings:
+                    c6 = h["cusip"][:6]
+                    if c6 in h_merged:
+                        h_merged[c6]["value"] += h["value"]
+                    else:
+                        h_merged[c6] = {"value": h["value"]}
+                h_total = sum(v["value"] for v in h_merged.values())
+                h_positions = len(h_merged)
+                h_top50_val = sum(v["value"] for v in sorted(h_merged.values(), key=lambda x: x["value"], reverse=True)[:50])
+                history.append({
+                    "period": f["period"],
+                    "filing_date": f["filing_date"],
+                    "total_value": h_total,
+                    "total_positions": h_positions,
+                    "top50_value": h_top50_val,
+                })
+                seen_periods.add(f["period"])
+                print(f"[OK] History {f['period']}: ${h_total:,.0f} ({h_positions} positions)")
+            else:
+                print(f"[WARN] History {f['period']}: parse failed, skipping")
+        except Exception as e:
+            print(f"[WARN] History {f['period']}: error {e}, skipping")
+
+    history.sort(key=lambda x: x["period"])
 
     with open(history_path, "w", encoding="utf-8") as f:
         json.dump(history, f, ensure_ascii=False, indent=2)
-    print(f"[OK] Saved holdings_history.json ({len(history)} quarters)")
+    print(f"\n[OK] Saved holdings_history.json ({len(history)} quarters, fully rebuilt)")
 
     print("\n[DONE] All data files updated successfully!")
 
