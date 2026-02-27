@@ -2,771 +2,226 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>국민연금 미국 주식 포트폴리오 | NPS US Stock Holdings</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>국민연금 미국 주식 포트폴리오 | Herdvibe</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg-primary: #0a0e17;
-    --bg-secondary: #111827;
-    --bg-card: #151d2e;
-    --bg-card-hover: #1a2340;
-    --border: #1e2a42;
-    --border-accent: #2a3a5c;
-    --text-primary: #e8ecf4;
-    --text-secondary: #8896b0;
-    --text-muted: #5a6a84;
-    --accent-blue: #3b82f6;
-    --accent-cyan: #06b6d4;
-    --accent-green: #10b981;
-    --accent-red: #ef4444;
-    --accent-yellow: #f59e0b;
-    --accent-purple: #8b5cf6;
-    --accent-orange: #f97316;
-    --accent-pink: #ec4899;
-    --new-badge: #6366f1;
-    --font-sans: 'Noto Sans KR', -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-family: var(--font-sans);
-    line-height: 1.6;
-    min-height: 100vh;
-  }
-
-  .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 24px 20px;
-  }
-
-  /* ─── Header ─── */
-  .header {
-    margin-bottom: 28px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--border);
-  }
-  .header-top {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 6px;
-  }
-  .flag { font-size: 28px; }
-  .header h1 {
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-  }
-  .header h1 span {
-    font-weight: 400;
-    color: var(--text-secondary);
-    font-size: 15px;
-    margin-left: 8px;
-  }
-  .header-meta {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    margin-top: 4px;
-  }
-  .header-meta .period {
-    color: var(--accent-cyan);
-  }
-
-  /* ─── Summary Cards ─── */
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 14px;
-    margin-bottom: 28px;
-  }
-  .summary-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px;
-    transition: border-color 0.2s;
-  }
-  .summary-card:hover { border-color: var(--border-accent); }
-  .summary-card .label {
-    font-size: 12px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-  }
-  .summary-card .value {
-    font-family: var(--font-mono);
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-  .summary-card .sub {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 2px;
-    font-family: var(--font-mono);
-  }
-  .summary-card .sub.positive { color: var(--accent-green); }
-  .summary-card .sub.negative { color: var(--accent-red); }
-
-  /* ─── Section ─── */
-  .section {
-    margin-bottom: 32px;
-  }
-  .section-title {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .section-title .icon { font-size: 18px; }
-
-  /* ─── Table ─── */
-  .table-wrap {
-    overflow-x: auto;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--bg-card);
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-  thead th {
-    position: sticky;
-    top: 0;
-    background: var(--bg-secondary);
-    color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-  }
-  thead th.right, td.right { text-align: right; }
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-  }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: var(--bg-card-hover); }
-  td {
-    padding: 10px 14px;
-    white-space: nowrap;
-  }
-  .rank-cell {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--text-muted);
-    width: 36px;
-  }
-  .ticker-cell {
-    font-family: var(--font-mono);
-    font-weight: 600;
-    color: var(--accent-cyan);
-    font-size: 13px;
-  }
-  .name-cell {
-    color: var(--text-secondary);
-    font-size: 12px;
-    max-width: 160px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .sector-cell {
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-  .mono-cell {
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-  .weight-bar {
-    display: inline-block;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--accent-blue);
-    margin-right: 6px;
-    vertical-align: middle;
-    opacity: 0.7;
-  }
-
-  /* Change Badges */
-  .badge {
-    display: inline-block;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    padding: 2px 7px;
-    border-radius: 4px;
-  }
-  .badge-new { background: rgba(99,102,241,0.15); color: var(--new-badge); }
-  .badge-up { background: rgba(16,185,129,0.12); color: var(--accent-green); }
-  .badge-down { background: rgba(239,68,68,0.12); color: var(--accent-red); }
-  .badge-flat { background: rgba(88,96,116,0.2); color: var(--text-muted); }
-
-  /* ─── Charts Grid ─── */
-  .charts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 28px;
-  }
-  .chart-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px;
-  }
-  .chart-card h3 {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .chart-container {
-    position: relative;
-    height: 260px;
-  }
-
-  /* ─── Trade Activity ─── */
-  .trade-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-  .trade-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px 18px;
-  }
-  .trade-card h4 {
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .trade-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    font-size: 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-  }
-  .trade-item:last-child { border-bottom: none; }
-  .trade-ticker {
-    font-family: var(--font-mono);
-    font-weight: 600;
-    color: var(--accent-cyan);
-  }
-  .trade-name {
-    color: var(--text-muted);
-    font-size: 11px;
-    margin-left: 8px;
-  }
-  .trade-val {
-    font-family: var(--font-mono);
-    font-size: 12px;
-  }
-  .trade-val.buy { color: var(--accent-green); }
-  .trade-val.sell { color: var(--accent-red); }
-
-  /* ─── Bar Chart Section ─── */
-  .bar-section {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px;
-  }
-  .bar-section h3 {
-    font-size: 14px;
-    font-weight: 600;
-    margin-bottom: 14px;
-  }
-
-  /* ─── Footer ─── */
-  .footer {
-    margin-top: 36px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--text-muted);
-    text-align: center;
-    line-height: 1.8;
-  }
-  .footer a {
-    color: var(--accent-blue);
-    text-decoration: none;
-  }
-  .footer a:hover { text-decoration: underline; }
-
-  /* ─── Loading ─── */
-  .loading {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 200px;
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-  .spinner {
-    width: 20px; height: 20px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent-cyan);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-right: 10px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ─── Responsive ─── */
-  @media (max-width: 768px) {
-    .container { padding: 16px 14px; }
-    .header h1 { font-size: 18px; }
-    .header h1 span { display: block; margin-left: 0; margin-top: 2px; }
-    .summary-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .summary-card .value { font-size: 20px; }
-    .charts-grid { grid-template-columns: 1fr; }
-    .trade-grid { grid-template-columns: 1fr; }
-    .chart-container { height: 220px; }
-    table { font-size: 12px; }
-    td, th { padding: 8px 10px; }
-    .name-cell { display: none; }
-  }
-  @media (max-width: 480px) {
-    .summary-grid { grid-template-columns: 1fr 1fr; }
-    .sector-cell { display: none; }
-  }
+:root{--bg0:#000;--bg1:#07070d;--bg2:#0d0d16;--bg3:#13131f;--bg4:#1a1a2a;--bdr:#1a1a2e;--bdr2:#282845;--t1:#e8e8f0;--t2:#b0b0c8;--t3:#8888a0;--t4:#686880;--g:#00ff88;--r:#ff4466;--b:#4488ff;--y:#ffcc00;--font-sans:'Noto Sans KR',system-ui,sans-serif;--font-mono:'JetBrains Mono',monospace;--font-head:'Plus Jakarta Sans',sans-serif}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:var(--font-sans);background:var(--bg0);color:var(--t1);line-height:1.6;min-height:100vh;overflow-x:hidden}
+a{color:var(--g);text-decoration:none}::selection{background:var(--b);color:#fff}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:var(--bg1)}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
+.hdr{padding:12px 28px;border-bottom:1px solid var(--bdr);display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg1);position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+.hdr-title{font-weight:700;font-size:18px;color:#fff;text-align:center}
+.hdr-sub{font-size:11px;color:var(--t4);font-family:var(--font-mono);margin-top:4px;text-align:center}
+.hdr-sub .hl{color:var(--b)}
+.page{max-width:960px;margin:0 auto;padding:20px 28px}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:20px}
+.summary-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;text-align:center;transition:border-color .2s}
+.summary-card:hover{border-color:var(--bdr2)}
+.summary-card .label{font-size:11px;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.summary-card .value{font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--t1)}
+.summary-card .sub{font-size:11px;color:var(--t3);margin-top:3px;font-family:var(--font-mono)}
+.summary-card .sub.pos{color:var(--g)}.summary-card .sub.neg{color:var(--r)}
+.chart-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:11px;overflow:hidden;margin-bottom:20px}
+.chart-head{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 20px;border-bottom:1px solid var(--bdr);gap:4px}
+.chart-head h3{font-family:var(--font-head);font-size:.875rem;font-weight:600;color:var(--t1);text-align:center}
+.chart-area{position:relative;padding:12px 20px;height:280px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.section-title{font-family:var(--font-head);font-size:.9rem;font-weight:600;color:var(--t1);text-align:center;margin-bottom:14px}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;border:1px solid var(--bdr);border-radius:11px;background:var(--bg2)}
+.table-wrap::-webkit-scrollbar{display:none}
+table{width:100%;border-collapse:collapse;font-size:.75rem;min-width:700px}
+thead th{position:sticky;top:0;background:var(--bg3);color:var(--t4);font-size:.6rem;font-weight:500;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--bdr);white-space:nowrap}
+thead th.right,td.right{text-align:right}
+tbody tr{border-bottom:1px solid var(--bdr);transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--bg3)}
+td{padding:7px 10px;white-space:nowrap}
+.rank-cell{font-family:var(--font-mono);font-size:.65rem;color:var(--t4);width:30px}
+.ticker-cell{font-family:var(--font-mono);font-weight:600;color:var(--b);font-size:.75rem}
+.name-cell{color:var(--t3);font-size:.65rem;max-width:140px;overflow:hidden;text-overflow:ellipsis}
+.sector-cell{font-size:.6rem;color:var(--t4)}
+.mono-cell{font-family:var(--font-mono);font-size:.65rem}
+.weight-bar{display:inline-block;height:3px;border-radius:2px;background:var(--b);margin-right:5px;vertical-align:middle;opacity:.7}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:.6rem;font-weight:500;padding:2px 6px;border-radius:3px}
+.badge-new{background:rgba(68,136,255,.12);color:var(--b)}
+.badge-up{background:rgba(0,255,136,.1);color:var(--g)}
+.badge-down{background:rgba(255,68,102,.1);color:var(--r)}
+.badge-flat{background:rgba(136,136,160,.15);color:var(--t4)}
+.trade-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.trade-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:11px;padding:14px 18px}
+.trade-card h4{font-family:var(--font-head);font-size:.8rem;font-weight:600;margin-bottom:10px;text-align:center}
+.trade-item{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:.7rem;border-bottom:1px solid rgba(255,255,255,.03)}
+.trade-item:last-child{border-bottom:none}
+.trade-ticker{font-family:var(--font-mono);font-weight:600;color:var(--b)}
+.trade-name{color:var(--t4);font-size:.6rem;margin-left:6px}
+.trade-val{font-family:var(--font-mono);font-size:.65rem}
+.trade-val.buy{color:var(--g)}.trade-val.sell{color:var(--r)}
+.bar-section{background:var(--bg2);border:1px solid var(--bdr);border-radius:11px;padding:16px 20px;margin-bottom:20px}
+.bar-section h3{font-family:var(--font-head);font-size:.8rem;font-weight:600;margin-bottom:12px;text-align:center}
+.footer{margin-top:28px;padding-top:14px;border-top:1px solid var(--bdr);font-size:.6rem;color:var(--t4);text-align:center;line-height:1.8}
+.footer a{color:var(--b);text-decoration:none}.footer a:hover{text-decoration:underline}
+.loading{display:flex;align-items:center;justify-content:center;height:200px;color:var(--t3);font-size:13px}
+.spinner{width:18px;height:18px;border:2px solid var(--bdr);border-top-color:var(--b);border-radius:50%;animation:spin .8s linear infinite;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.share-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;margin-top:28px;background:var(--bg1);border:1px solid var(--bdr);border-radius:10px}
+.share-bar-preview{font-size:11px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%;font-family:var(--font-mono)}
+.share-bar-preview b{color:var(--t2);font-weight:600}
+.share-bar-buttons{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.share-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;border:1px solid var(--bdr2);background:var(--bg2);color:var(--t3);white-space:nowrap;font-family:inherit}
+.share-btn:hover{transform:translateY(-1px);color:var(--t1)}
+.share-btn svg{flex-shrink:0}
+.share-btn--x:hover{border-color:#fff;color:#fff;background:var(--bg3)}
+.share-btn--kakao:hover{border-color:#FEE500;color:#191919;background:#FEE500}
+.share-btn--tg:hover{border-color:#26A5E4;color:#fff;background:rgba(38,165,228,.15)}
+.share-btn--ig:hover{border-color:#E4405F;color:#fff;background:rgba(228,64,95,.15)}
+.share-btn--copy:hover{border-color:var(--g);color:var(--g);background:rgba(0,255,136,.07)}
+.inline-share{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 0;border-top:1px solid var(--bdr)}
+.inline-share .lbl{font-size:10px;color:var(--t4);margin-right:4px}
+.inline-share .share-btn{padding:6px 10px}
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:999}
+.toast{background:var(--bg4);border:1px solid var(--bdr2);border-left:3px solid var(--g);border-radius:8px;padding:10px 18px;font-size:12px;color:var(--t1);box-shadow:0 8px 32px rgba(0,0,0,.7);animation:toastIn .3s ease}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){
+.page{padding:12px 16px}.hdr{padding:8px 16px}
+.charts-grid{grid-template-columns:1fr}.trade-grid{grid-template-columns:1fr}
+.chart-area{height:240px;padding:10px}
+.summary-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+.summary-card .value{font-size:18px}
+.name-cell{display:none}
+.share-bar{flex-direction:column;gap:10px;align-items:stretch}
+.share-bar-preview{max-width:100%}
+.share-bar-buttons{justify-content:center;flex-wrap:wrap}
+.share-btn .lbl{display:none}.share-btn{padding:8px 10px}
+.inline-share .lbl{display:none}
+}
+@media(max-width:520px){
+.page{padding:10px 10px}.chart-area{height:220px;padding:8px}
+.sector-cell{display:none}
+table{font-size:.65rem;min-width:560px}
+}
 </style>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.1/kakao.min.js" crossorigin="anonymous" async></script>
 </head>
 <body>
-<div class="container" id="app">
-  <div class="loading" id="loader">
-    <div class="spinner"></div> 데이터 로드 중...
-  </div>
+<div class="hdr">
+  <span class="hdr-title">국민연금 미국 주식 포트폴리오</span>
+  <span class="hdr-sub">NPS 13F Holdings · SEC EDGAR CIK 0001608046</span>
+</div>
+<div class="page">
+  <div id="app"><div class="loading"><div class="spinner"></div> 데이터 로드 중...</div></div>
 </div>
 
 <script>
-const DATA_BASE = './data/';
-const SECTOR_COLORS = {
-  'Information Technology': '#3b82f6',
-  'Health Care': '#10b981',
-  'Financials': '#f59e0b',
-  'Consumer Discretionary': '#ec4899',
-  'Consumer Staples': '#8b5cf6',
-  'Communication Services': '#06b6d4',
-  'Energy': '#f97316',
-  'Industrials': '#64748b',
-  'Materials': '#a78bfa',
-  'Utilities': '#34d399',
-  'ETF': '#94a3b8',
-  'Other': '#475569',
-};
+var SHARE_URL='https://herdvibe.com/103';
+var KAKAO_KEY='a43ed7b39fac35458f4f9df925a279b5';
+var DATA_BASE='./data/';
+var SECTOR_COLORS={'Information Technology':'#4488ff','Health Care':'#00ff88','Financials':'#ffcc00','Consumer Discretionary':'#ff4466','Consumer Staples':'#8b5cf6','Communication Services':'#06b6d4','Energy':'#f97316','Industrials':'#64748b','Materials':'#a78bfa','Utilities':'#34d399','ETF':'#94a3b8','Other':'#475569'};
 
-function fmt(n) {
-  if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
-  if (n >= 1e6) return '$' + (n / 1e6).toFixed(0) + 'M';
-  return '$' + n.toLocaleString();
-}
-function fmtKr(n) {
-  if (n >= 1e12) return (n / 1e12).toFixed(1) + '조';
-  if (n >= 1e8) return (n / 1e8).toFixed(0) + '억';
-  return n.toLocaleString();
-}
-function fmtShares(n) {
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
-  return n.toLocaleString();
-}
-function periodLabel(p) {
-  const d = new Date(p);
-  const y = d.getFullYear();
-  const m = d.getMonth();
-  const q = Math.floor(m / 3) + 1;
-  return y + ' Q' + q;
-}
+function fmt(n){if(n>=1e9)return'$'+(n/1e9).toFixed(1)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(0)+'M';return'$'+n.toLocaleString();}
+function fmtShares(n){if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(0)+'K';return n.toLocaleString();}
+function periodLabel(p){var d=new Date(p);var q=Math.floor(d.getMonth()/3)+1;return d.getFullYear()+' Q'+q;}
+async function loadJSON(f){var r=await fetch(DATA_BASE+f);if(!r.ok)throw new Error('Failed: '+f);return r.json();}
 
-async function loadJSON(file) {
-  const resp = await fetch(DATA_BASE + file);
-  if (!resp.ok) throw new Error('Failed: ' + file);
-  return resp.json();
-}
+/* === Share === */
+function ensureKakao(){try{if(typeof Kakao!=='undefined'&&!Kakao.isInitialized())Kakao.init(KAKAO_KEY);return typeof Kakao!=='undefined'&&Kakao.isInitialized();}catch(e){return false;}}
+function copyToClipboard(t){if(window.parent!==window){window.parent.postMessage({type:'copy',text:t},'*')}if(navigator.clipboard&&navigator.clipboard.writeText&&window.isSecureContext){navigator.clipboard.writeText(t).catch(function(){_fbCopy(t)})}else{_fbCopy(t)}}function _fbCopy(t){var a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;left:-9999px;top:-9999px;opacity:0';document.body.appendChild(a);a.focus();a.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(a)}
+function flashCopied(btn){if(!btn)return;var orig=btn.innerHTML;btn.style.background='#22c55e';btn.style.color='#fff';btn.style.borderColor='#22c55e';setTimeout(function(){btn.style.background='';btn.style.color='';btn.style.borderColor='';btn.innerHTML=orig;},2000);}
+function kakaoShare(title){if(!ensureKakao()){copyToClipboard(SHARE_URL);showToast('링크 복사완료!');return;}try{Kakao.Share.sendDefault({objectType:'feed',content:{title:title||document.title,description:'국민연금 미국 주식 포트폴리오 (SEC 13F)',imageUrl:'https://raw.githubusercontent.com/kittycapital/kittycapital.github.io/main/assets/herdvibe-og.png',link:{mobileWebUrl:SHARE_URL,webUrl:SHARE_URL}},buttons:[{title:'대시보드 보기',link:{mobileWebUrl:SHARE_URL,webUrl:SHARE_URL}}]});}catch(e){copyToClipboard(SHARE_URL);showToast('링크 복사완료!');}}
+function showToast(msg){var w=document.querySelector('.toast-wrap');if(!w){w=document.createElement('div');w.className='toast-wrap';document.body.appendChild(w);}var t=document.createElement('div');t.className='toast';t.textContent=msg;w.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(12px)';t.style.transition='.3s';setTimeout(function(){t.remove();},300);},3000);}
+function doShare(p,btn){var title='국민연금 미국 주식 포트폴리오 — herdvibe.com';switch(p){case'twitter':window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(title)+'&url='+encodeURIComponent(SHARE_URL),'_blank');break;case'telegram':window.open('https://t.me/share/url?url='+encodeURIComponent(SHARE_URL)+'&text='+encodeURIComponent(title),'_blank');break;case'kakao':kakaoShare(title);break;case'instagram':copyToClipboard(SHARE_URL);flashCopied(btn);showToast('링크 복사완료! 인스타그램에 붙여넣기 하세요');break;case'link':copyToClipboard(SHARE_URL);flashCopied(btn);showToast('링크가 복사되었습니다');break;}}
+var xI='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+var kI='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3C6.477 3 2 6.463 2 10.691c0 2.724 1.8 5.112 4.508 6.458l-1.148 4.265a.5.5 0 0 0 .764.533l4.94-3.26c.304.02.612.03.936.03 5.523 0 10-3.462 10-7.735C22 6.463 17.523 3 12 3z"/></svg>';
+var tI='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>';
+var iI='<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>';
+var lI='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+function makeInlineShare(el){if(!el)return;el.innerHTML='<span class="lbl">공유</span><button class="share-btn share-btn--x" onclick="doShare(\'twitter\',this)">'+xI+'</button><button class="share-btn share-btn--kakao" onclick="doShare(\'kakao\',this)">'+kI+'</button><button class="share-btn share-btn--tg" onclick="doShare(\'telegram\',this)">'+tI+'</button><button class="share-btn share-btn--copy" onclick="doShare(\'link\',this)">'+lI+'</button>';}
+function makeShareBar(el){if(!el)return;el.innerHTML='<div class="share-bar"><div class="share-bar-preview"><b>국민연금 미국 주식 포트폴리오</b> — herdvibe.com</div><div class="share-bar-buttons"><button class="share-btn share-btn--x" onclick="doShare(\'twitter\',this)">'+xI+'<span class="lbl">트위터</span></button><button class="share-btn share-btn--kakao" onclick="doShare(\'kakao\',this)">'+kI+'<span class="lbl">카카오톡</span></button><button class="share-btn share-btn--tg" onclick="doShare(\'telegram\',this)">'+tI+'<span class="lbl">텔레그램</span></button><button class="share-btn share-btn--ig" onclick="doShare(\'instagram\',this)">'+iI+'<span class="lbl">인스타</span></button><button class="share-btn share-btn--copy" onclick="doShare(\'link\',this)">'+lI+'<span class="lbl">링크 복사</span></button></div></div>';}
 
-async function init() {
-  try {
-    const [current, history] = await Promise.all([
-      loadJSON('holdings_current.json'),
-      loadJSON('holdings_history.json'),
-    ]);
-    render(current, history);
-  } catch (e) {
-    document.getElementById('loader').innerHTML =
-      '<span style="color:var(--accent-red)">데이터 로드 실패: ' + e.message + '</span>';
+/* === Watermark Plugin === */
+Chart.defaults.color='#555';Chart.defaults.borderColor='rgba(255,255,255,0.06)';Chart.defaults.font.family="'Noto Sans KR',sans-serif";
+var wmPlugin={id:'herdvibeWM',beforeDraw:function(c){var ctx=c.ctx,ca=c.chartArea;if(!ca)return;ctx.save();ctx.font='700 28px "Plus Jakarta Sans",sans-serif';ctx.fillStyle='rgba(255,255,255,0.035)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Herdvibe.com',(ca.left+ca.right)/2,(ca.top+ca.bottom)/2);ctx.restore();}};
+
+async function init(){
+  try{
+    var current=await loadJSON('holdings_current.json');
+    var history=await loadJSON('holdings_history.json');
+    render(current,history);
+  }catch(e){
+    document.getElementById('app').innerHTML='<div class="loading" style="color:var(--r)">데이터 로드 실패: '+e.message+'</div>';
   }
 }
 
-function render(data, history) {
-  const app = document.getElementById('app');
-  const prev = history.length >= 2 ? history[history.length - 2] : null;
-  const valueDiff = prev ? data.total_value - prev.total_value : 0;
-  const valueDiffPct = prev ? ((valueDiff / prev.total_value) * 100).toFixed(1) : 0;
+function render(data,history){
+  var app=document.getElementById('app');
+  var prev=history.length>=2?history[history.length-2]:null;
+  var vDiff=prev?data.total_value-prev.total_value:0;
+  var vPct=prev?((vDiff/prev.total_value)*100).toFixed(1):0;
 
-  // Sector aggregation
-  const sectorMap = {};
-  data.top50.forEach(h => {
-    const s = h.sector || 'Other';
-    sectorMap[s] = (sectorMap[s] || 0) + h.value;
-  });
-  const sectorEntries = Object.entries(sectorMap).sort((a, b) => b[1] - a[1]);
+  var sectorMap={};
+  data.top50.forEach(function(h){var s=h.sector||'Other';sectorMap[s]=(sectorMap[s]||0)+h.value;});
+  var sectorEntries=Object.entries(sectorMap).sort(function(a,b){return b[1]-a[1];});
 
-  // New buys
-  const newBuys = data.top50.filter(h => h.status === 'new');
-  // Top movers
-  const movers = [...data.top50]
-    .filter(h => h.status !== 'unchanged' && h.status !== 'new')
-    .sort((a, b) => Math.abs(b.change_pct) - Math.abs(a.change_pct))
-    .slice(0, 8);
+  var newBuys=data.top50.filter(function(h){return h.status==='new';});
+  var movers=data.top50.filter(function(h){return h.status!=='unchanged'&&h.status!=='new';}).sort(function(a,b){return Math.abs(b.change_pct)-Math.abs(a.change_pct);}).slice(0,8);
 
-  app.innerHTML = `
-    <!-- Header -->
-    <div class="header">
-      <div class="header-top">
-        <span class="flag">🇺🇸</span>
-        <h1>국민연금 미국 주식 포트폴리오 <span>NPS 13F Holdings</span></h1>
-      </div>
-      <div class="header-meta">
-        Filing: <span class="period">${data.filing_date}</span> &nbsp;|&nbsp;
-        Period: <span class="period">${periodLabel(data.period)}</span> &nbsp;|&nbsp;
-        SEC EDGAR CIK 0001608046
-      </div>
-    </div>
+  app.innerHTML=
+    '<div class="summary-grid">'+
+      '<div class="summary-card"><div class="label">총 보유 금액</div><div class="value">'+fmt(data.total_value)+'</div><div class="sub '+(vDiff>=0?'pos':'neg')+'">'+(vDiff>=0?'+ ':'- ')+fmt(Math.abs(vDiff))+' ('+(vDiff>=0?'+':'')+vPct+'%)</div></div>'+
+      '<div class="summary-card"><div class="label">총 보유 종목</div><div class="value">'+data.total_positions+'</div><div class="sub">Top 50 비중: '+(data.top50_value/data.total_value*100).toFixed(1)+'%</div></div>'+
+      '<div class="summary-card"><div class="label">신규 매수</div><div class="value" style="color:var(--g)">'+newBuys.length+'종목</div><div class="sub">'+(newBuys.map(function(h){return h.ticker||h.name.slice(0,8);}).join(', ')||'-')+'</div></div>'+
+      '<div class="summary-card"><div class="label">완전 매도</div><div class="value" style="color:var(--r)">'+data.sold_positions.length+'종목</div><div class="sub">'+(data.sold_positions.map(function(h){return h.ticker||h.name.slice(0,8);}).join(', ')||'-')+'</div></div>'+
+    '</div>'+
+    '<div class="charts-grid">'+
+      '<div class="chart-card"><div class="chart-head"><h3>섹터별 비중 (Top 50)</h3></div><div class="chart-area"><canvas id="sectorChart"></canvas></div><div class="inline-share" id="is1"></div></div>'+
+      '<div class="chart-card"><div class="chart-head"><h3>분기별 총 보유금액 추이</h3></div><div class="chart-area"><canvas id="historyChart"></canvas></div><div class="inline-share" id="is2"></div></div>'+
+    '</div>'+
+    '<div class="section-title">분기별 매매 동향</div>'+
+    '<div class="trade-grid">'+
+      '<div class="trade-card"><h4 style="color:var(--g)">신규 매수</h4>'+(newBuys.length?newBuys.map(function(h){return'<div class="trade-item"><div><span class="trade-ticker">'+(h.ticker||'-')+'</span><span class="trade-name">'+h.name+'</span></div><span class="trade-val buy">'+fmt(h.value)+'</span></div>';}).join(''):'<div style="color:var(--t4);font-size:.7rem;padding:6px 0;text-align:center">해당 없음</div>')+'</div>'+
+      '<div class="trade-card"><h4 style="color:var(--r)">완전 매도</h4>'+(data.sold_positions.length?data.sold_positions.map(function(h){return'<div class="trade-item"><div><span class="trade-ticker">'+(h.ticker||'-')+'</span><span class="trade-name">'+h.name+'</span></div><span class="trade-val sell">'+fmt(h.value)+'</span></div>';}).join(''):'<div style="color:var(--t4);font-size:.7rem;padding:6px 0;text-align:center">해당 없음</div>')+'</div>'+
+    '</div>'+
+    '<div class="bar-section"><h3>주요 비중 변동 종목 (전 분기 대비)</h3><div style="position:relative;height:240px"><canvas id="moversChart"></canvas></div></div>'+
+    '<div class="section-title">Top 50 보유 종목</div>'+
+    '<div class="table-wrap"><table><thead><tr><th>#</th><th>티커</th><th>종목명</th><th>섹터</th><th class="right">보유주식</th><th class="right">시장가치</th><th class="right">비중</th><th class="right">변동</th></tr></thead><tbody>'+
+    data.top50.map(function(h){
+      var badge='';
+      if(h.status==='new')badge='<span class="badge badge-new">NEW</span>';
+      else if(h.status==='increased')badge='<span class="badge badge-up">+'+h.change_pct+'%</span>';
+      else if(h.status==='decreased')badge='<span class="badge badge-down">'+h.change_pct+'%</span>';
+      else badge='<span class="badge badge-flat">-</span>';
+      var barW=Math.max(2,h.weight*12);
+      return'<tr><td class="rank-cell">'+h.rank+'</td><td class="ticker-cell">'+(h.ticker||'-')+'</td><td class="name-cell">'+h.name+'</td><td class="sector-cell">'+h.sector+'</td><td class="mono-cell right">'+fmtShares(h.shares)+'</td><td class="mono-cell right">'+fmt(h.value)+'</td><td class="mono-cell right"><span class="weight-bar" style="width:'+barW+'px"></span>'+h.weight+'%</td><td class="right">'+badge+'</td></tr>';
+    }).join('')+
+    '</tbody></table></div>'+
+    '<div id="shareBarWrap"></div>'+
+    '<div class="footer">'+
+      '데이터 출처: <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001608046&type=13F" target="_blank">SEC EDGAR</a> 13F Filing (CIK: 0001608046)<br>'+
+      '본 대시보드는 정보 제공 목적이며, 투자 권유가 아닙니다.<br>'+
+      'HerdVibe · Filing: '+data.filing_date+' · Period: '+periodLabel(data.period)+
+    '</div>';
 
-    <!-- Summary Cards -->
-    <div class="summary-grid">
-      <div class="summary-card">
-        <div class="label">총 보유 금액</div>
-        <div class="value">${fmt(data.total_value)}</div>
-        <div class="sub ${valueDiff >= 0 ? 'positive' : 'negative'}">
-          ${valueDiff >= 0 ? '▲' : '▼'} ${fmt(Math.abs(valueDiff))} (${valueDiff >= 0 ? '+' : ''}${valueDiffPct}%)
-        </div>
-      </div>
-      <div class="summary-card">
-        <div class="label">총 보유 종목</div>
-        <div class="value">${data.total_positions}</div>
-        <div class="sub">Top 50 비중: ${(data.top50_value / data.total_value * 100).toFixed(1)}%</div>
-      </div>
-      <div class="summary-card">
-        <div class="label">신규 매수</div>
-        <div class="value" style="color:var(--accent-green)">${newBuys.length}종목</div>
-        <div class="sub">${newBuys.map(h => h.ticker).join(', ') || '-'}</div>
-      </div>
-      <div class="summary-card">
-        <div class="label">완전 매도</div>
-        <div class="value" style="color:var(--accent-red)">${data.sold_positions.length}종목</div>
-        <div class="sub">${data.sold_positions.map(h => h.ticker).join(', ') || '-'}</div>
-      </div>
-    </div>
+  makeInlineShare(document.getElementById('is1'));
+  makeInlineShare(document.getElementById('is2'));
+  makeShareBar(document.getElementById('shareBarWrap'));
 
-    <!-- Charts: Sector + History -->
-    <div class="charts-grid">
-      <div class="chart-card">
-        <h3><span class="icon">🎯</span> 섹터별 비중 (Top 50)</h3>
-        <div class="chart-container"><canvas id="sectorChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3><span class="icon">📈</span> 분기별 총 보유금액 추이</h3>
-        <div class="chart-container"><canvas id="historyChart"></canvas></div>
-      </div>
-    </div>
+  /* Sector Donut */
+  new Chart(document.getElementById('sectorChart').getContext('2d'),{type:'doughnut',plugins:[wmPlugin],data:{labels:sectorEntries.map(function(e){return e[0];}),datasets:[{data:sectorEntries.map(function(e){return e[1];}),backgroundColor:sectorEntries.map(function(e){return SECTOR_COLORS[e[0]]||'#475569';}),borderWidth:0,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'right',labels:{color:'#8888a0',font:{family:"'Noto Sans KR'",size:10},padding:8,boxWidth:10,boxHeight:10,borderRadius:2,useBorderRadius:true}},tooltip:{backgroundColor:'rgba(10,10,10,.95)',titleFont:{family:"'Noto Sans KR'"},bodyFont:{family:"'JetBrains Mono'",size:11},borderColor:'rgba(255,255,255,.08)',borderWidth:1,callbacks:{label:function(ctx){var val=ctx.raw;var total=ctx.dataset.data.reduce(function(a,b){return a+b;},0);return' '+fmt(val)+' ('+(val/total*100).toFixed(1)+'%)';}}}}}});
 
-    <!-- Trade Activity -->
-    <div class="section">
-      <div class="section-title"><span class="icon">🔄</span> 분기별 매매 동향</div>
-      <div class="trade-grid">
-        <div class="trade-card">
-          <h4 style="color:var(--accent-green)">🟢 신규 매수</h4>
-          ${newBuys.length ? newBuys.map(h => `
-            <div class="trade-item">
-              <div><span class="trade-ticker">${h.ticker}</span><span class="trade-name">${h.name}</span></div>
-              <span class="trade-val buy">${fmt(h.value)}</span>
-            </div>
-          `).join('') : '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">해당 없음</div>'}
-        </div>
-        <div class="trade-card">
-          <h4 style="color:var(--accent-red)">🔴 완전 매도</h4>
-          ${data.sold_positions.length ? data.sold_positions.map(h => `
-            <div class="trade-item">
-              <div><span class="trade-ticker">${h.ticker}</span><span class="trade-name">${h.name}</span></div>
-              <span class="trade-val sell">${fmt(h.value)}</span>
-            </div>
-          `).join('') : '<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">해당 없음</div>'}
-        </div>
-      </div>
-    </div>
+  /* History Line */
+  new Chart(document.getElementById('historyChart').getContext('2d'),{type:'line',plugins:[wmPlugin],data:{labels:history.map(function(h){return periodLabel(h.period);}),datasets:[{label:'총 보유금액',data:history.map(function(h){return h.total_value/1e9;}),borderColor:'#4488ff',backgroundColor:'rgba(68,136,255,.08)',fill:true,tension:.3,pointRadius:3,pointBackgroundColor:'#4488ff',pointBorderColor:'#000',pointBorderWidth:2},{label:'종목 수',data:history.map(function(h){return h.total_positions;}),borderColor:'#8b5cf6',borderDash:[4,4],tension:.3,pointRadius:2,pointBackgroundColor:'#8b5cf6',yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{color:'#8888a0',font:{family:"'Noto Sans KR'",size:10},boxWidth:14,boxHeight:2}},tooltip:{backgroundColor:'rgba(10,10,10,.95)',titleFont:{family:"'Noto Sans KR'"},bodyFont:{family:"'JetBrains Mono'",size:11},borderColor:'rgba(255,255,255,.08)',borderWidth:1,callbacks:{label:function(ctx){if(ctx.datasetIndex===0)return' $'+ctx.raw.toFixed(1)+'B';return' '+ctx.raw+' 종목';}}}},scales:{x:{ticks:{color:'#686880',font:{family:"'JetBrains Mono'",size:9}},grid:{color:'rgba(255,255,255,.03)'}},y:{position:'left',ticks:{color:'#686880',font:{family:"'JetBrains Mono'",size:9},callback:function(v){return'$'+v+'B';}},grid:{color:'rgba(255,255,255,.04)'}},y1:{position:'right',ticks:{color:'#686880',font:{family:"'JetBrains Mono'",size:9}},grid:{drawOnChartArea:false}}}}});
 
-    <!-- Top Movers Bar Chart -->
-    <div class="section">
-      <div class="bar-section">
-        <h3><span class="icon">⚡</span> 주요 비중 변동 종목 (전 분기 대비)</h3>
-        <div class="chart-container" style="height:240px;"><canvas id="moversChart"></canvas></div>
-      </div>
-    </div>
-
-    <!-- Holdings Table -->
-    <div class="section">
-      <div class="section-title"><span class="icon">📋</span> Top 50 보유 종목</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>티커</th>
-              <th>종목명</th>
-              <th>섹터</th>
-              <th class="right">보유주식</th>
-              <th class="right">시장가치</th>
-              <th class="right">비중</th>
-              <th class="right">변동</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${data.top50.map(h => {
-              let badge = '';
-              if (h.status === 'new') badge = '<span class="badge badge-new">▲ NEW</span>';
-              else if (h.status === 'increased') badge = `<span class="badge badge-up">+${h.change_pct}%</span>`;
-              else if (h.status === 'decreased') badge = `<span class="badge badge-down">${h.change_pct}%</span>`;
-              else badge = '<span class="badge badge-flat">━</span>';
-
-              const barW = Math.max(2, h.weight * 12);
-              return `<tr>
-                <td class="rank-cell">${h.rank}</td>
-                <td class="ticker-cell">${h.ticker || '—'}</td>
-                <td class="name-cell">${h.name}</td>
-                <td class="sector-cell">${h.sector}</td>
-                <td class="mono-cell right">${fmtShares(h.shares)}</td>
-                <td class="mono-cell right">${fmt(h.value)}</td>
-                <td class="mono-cell right"><span class="weight-bar" style="width:${barW}px"></span>${h.weight}%</td>
-                <td class="right">${badge}</td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="footer">
-      데이터 출처: <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001608046&type=13F&dateb=&owner=include&count=40" target="_blank" rel="noopener">SEC EDGAR</a> 13F Filing (CIK: 0001608046)<br>
-      본 대시보드는 정보 제공 목적이며, 투자 권유가 아닙니다.<br>
-      © HerdVibe · 마지막 업데이트: ${data.updated_at ? new Date(data.updated_at).toLocaleDateString('ko-KR') : '—'}
-    </div>
-  `;
-
-  // ─── Sector Donut Chart ───
-  const sectorCtx = document.getElementById('sectorChart').getContext('2d');
-  new Chart(sectorCtx, {
-    type: 'doughnut',
-    data: {
-      labels: sectorEntries.map(e => e[0]),
-      datasets: [{
-        data: sectorEntries.map(e => e[1]),
-        backgroundColor: sectorEntries.map(e => SECTOR_COLORS[e[0]] || '#475569'),
-        borderWidth: 0,
-        hoverOffset: 6,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '62%',
-      plugins: {
-        legend: {
-          position: 'right',
-          labels: {
-            color: '#8896b0',
-            font: { family: "'Noto Sans KR'", size: 11 },
-            padding: 10,
-            boxWidth: 12,
-            boxHeight: 12,
-            borderRadius: 3,
-            useBorderRadius: true,
-          }
-        },
-        tooltip: {
-          backgroundColor: '#1a2340',
-          titleFont: { family: "'Noto Sans KR'" },
-          bodyFont: { family: "'JetBrains Mono'", size: 12 },
-          borderColor: '#2a3a5c',
-          borderWidth: 1,
-          callbacks: {
-            label: ctx => {
-              const val = ctx.raw;
-              const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-              return ` ${fmt(val)} (${(val/total*100).toFixed(1)}%)`;
-            }
-          }
-        }
-      }
-    }
-  });
-
-  // ─── History Line Chart ───
-  const histCtx = document.getElementById('historyChart').getContext('2d');
-  new Chart(histCtx, {
-    type: 'line',
-    data: {
-      labels: history.map(h => periodLabel(h.period)),
-      datasets: [{
-        label: '총 보유금액',
-        data: history.map(h => h.total_value / 1e9),
-        borderColor: '#3b82f6',
-        backgroundColor: 'rgba(59,130,246,0.08)',
-        fill: true,
-        tension: 0.3,
-        pointRadius: 4,
-        pointBackgroundColor: '#3b82f6',
-        pointBorderColor: '#0a0e17',
-        pointBorderWidth: 2,
-        pointHoverRadius: 6,
-      }, {
-        label: '종목 수',
-        data: history.map(h => h.total_positions),
-        borderColor: '#8b5cf6',
-        borderDash: [4, 4],
-        tension: 0.3,
-        pointRadius: 3,
-        pointBackgroundColor: '#8b5cf6',
-        yAxisID: 'y1',
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          labels: {
-            color: '#8896b0',
-            font: { family: "'Noto Sans KR'", size: 11 },
-            boxWidth: 16, boxHeight: 2,
-          }
-        },
-        tooltip: {
-          backgroundColor: '#1a2340',
-          titleFont: { family: "'Noto Sans KR'" },
-          bodyFont: { family: "'JetBrains Mono'", size: 12 },
-          borderColor: '#2a3a5c',
-          borderWidth: 1,
-          callbacks: {
-            label: ctx => {
-              if (ctx.datasetIndex === 0) return ` $${ctx.raw.toFixed(1)}B`;
-              return ` ${ctx.raw} 종목`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#5a6a84', font: { family: "'JetBrains Mono'", size: 10 } },
-          grid: { color: 'rgba(255,255,255,0.03)' },
-        },
-        y: {
-          position: 'left',
-          ticks: {
-            color: '#5a6a84',
-            font: { family: "'JetBrains Mono'", size: 10 },
-            callback: v => '$' + v + 'B'
-          },
-          grid: { color: 'rgba(255,255,255,0.04)' },
-        },
-        y1: {
-          position: 'right',
-          ticks: {
-            color: '#5a6a84',
-            font: { family: "'JetBrains Mono'", size: 10 },
-          },
-          grid: { drawOnChartArea: false },
-        }
-      }
-    }
-  });
-
-  // ─── Top Movers Bar Chart ───
-  const mCtx = document.getElementById('moversChart').getContext('2d');
-  const moversSorted = movers.sort((a, b) => b.change_pct - a.change_pct);
-  new Chart(mCtx, {
-    type: 'bar',
-    data: {
-      labels: moversSorted.map(h => h.ticker),
-      datasets: [{
-        data: moversSorted.map(h => h.change_pct),
-        backgroundColor: moversSorted.map(h =>
-          h.change_pct >= 0 ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)'
-        ),
-        borderRadius: 4,
-        barThickness: 28,
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1a2340',
-          bodyFont: { family: "'JetBrains Mono'", size: 12 },
-          borderColor: '#2a3a5c',
-          borderWidth: 1,
-          callbacks: {
-            label: ctx => ` ${ctx.raw > 0 ? '+' : ''}${ctx.raw}% (${fmtShares(Math.abs(movers[ctx.dataIndex].change_shares))} shares)`
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: {
-            color: '#5a6a84',
-            font: { family: "'JetBrains Mono'", size: 10 },
-            callback: v => v + '%'
-          },
-          grid: { color: 'rgba(255,255,255,0.04)' },
-        },
-        y: {
-          ticks: {
-            color: '#06b6d4',
-            font: { family: "'JetBrains Mono'", size: 12, weight: 600 },
-          },
-          grid: { display: false },
-        }
-      }
-    }
-  });
+  /* Movers Bar */
+  var ms=movers.sort(function(a,b){return b.change_pct-a.change_pct;});
+  new Chart(document.getElementById('moversChart').getContext('2d'),{type:'bar',plugins:[wmPlugin],data:{labels:ms.map(function(h){return h.ticker||h.name.slice(0,8);}),datasets:[{data:ms.map(function(h){return h.change_pct;}),backgroundColor:ms.map(function(h){return h.change_pct>=0?'rgba(0,255,136,.6)':'rgba(255,68,102,.6)';}),borderRadius:4,barThickness:24}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'rgba(10,10,10,.95)',bodyFont:{family:"'JetBrains Mono'",size:11},borderColor:'rgba(255,255,255,.08)',borderWidth:1,callbacks:{label:function(ctx){return' '+(ctx.raw>0?'+':'')+ctx.raw+'%';}}}},scales:{x:{ticks:{color:'#686880',font:{family:"'JetBrains Mono'",size:9},callback:function(v){return v+'%';}},grid:{color:'rgba(255,255,255,.04)'}},y:{ticks:{color:'#4488ff',font:{family:"'JetBrains Mono'",size:11,weight:600}},grid:{display:false}}}}});
 }
 
-// Start
+/* iframe resize */
+(function(){var lastH=0;setInterval(function(){if(window.parent!==window){var h=document.body.scrollHeight;if(h!==lastH){lastH=h;window.parent.postMessage({type:'resize',height:h},'*');}}},300);})();
+
 init();
 </script>
 </body>
