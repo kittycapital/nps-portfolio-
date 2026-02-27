@@ -1,59 +1,66 @@
 [
   {
-    "period": "2023-12-31",
-    "filing_date": "2024-02-14",
-    "total_value": 62450000000,
-    "total_positions": 412,
-    "top50_value": 46200000000
+    "period": "2019-09-30",
+    "filing_date": "2019-11-15",
+    "total_value": 31601469000,
+    "total_positions": 484,
+    "top50_value": 15513379000
+  },
+  {
+    "period": "2020-12-31",
+    "filing_date": "2021-02-19",
+    "total_value": 43861521000,
+    "total_positions": 481,
+    "top50_value": 23053284000
+  },
+  {
+    "period": "2021-06-30",
+    "filing_date": "2021-08-17",
+    "total_value": 52642460000,
+    "total_positions": 503,
+    "top50_value": 27415286000
+  },
+  {
+    "period": "2022-06-30",
+    "filing_date": "2022-08-17",
+    "total_value": 48514435000,
+    "total_positions": 528,
+    "top50_value": 25721559000
+  },
+  {
+    "period": "2022-09-30",
+    "filing_date": "2022-11-18",
+    "total_value": 47924144000,
+    "total_positions": 531,
+    "top50_value": 25292676000
+  },
+  {
+    "period": "2023-06-30",
+    "filing_date": "2023-08-16",
+    "total_value": 61995122045,
+    "total_positions": 505,
+    "top50_value": 34131354368
   },
   {
     "period": "2024-03-31",
-    "filing_date": "2024-05-15",
-    "total_value": 68120000000,
-    "total_positions": 428,
-    "top50_value": 50800000000
-  },
-  {
-    "period": "2024-06-30",
-    "filing_date": "2024-08-14",
-    "total_value": 72380000000,
-    "total_positions": 445,
-    "top50_value": 54100000000
-  },
-  {
-    "period": "2024-09-30",
-    "filing_date": "2024-11-14",
-    "total_value": 78940000000,
-    "total_positions": 461,
-    "top50_value": 58900000000
-  },
-  {
-    "period": "2024-12-31",
-    "filing_date": "2025-02-14",
-    "total_value": 82150000000,
-    "total_positions": 470,
-    "top50_value": 61400000000
-  },
-  {
-    "period": "2025-03-31",
-    "filing_date": "2025-05-15",
-    "total_value": 85670000000,
-    "total_positions": 478,
-    "top50_value": 64100000000
+    "filing_date": "2024-05-14",
+    "total_value": 83331937585,
+    "total_positions": 538,
+    "top50_value": 46785387747
   },
   {
     "period": "2025-06-30",
-    "filing_date": "2025-08-14",
-    "total_value": 87920000000,
-    "total_positions": 483,
-    "top50_value": 65800000000
+    "filing_date": "2025-08-08",
+    "total_value": 115829794515,
+    "total_positions": 530,
+    "top50_value": 69305235374
   },
   {
     "period": "2025-09-30",
-    "filing_date": "2025-11-14",
-    "total_value": 91247835000,
-    "total_positions": 487,
-    "top50_value": 68219640000
+    "filing_date": "2025-11-04",
+    "total_value": 128772128947,
+    "total_positions": 547,
+    "top50_value": 78456531532
   },
   {
     "period": "2025-12-31",
