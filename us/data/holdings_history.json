@@ -1,12 +1,5 @@
 [
   {
-    "period": "2023-06-30",
-    "filing_date": "2023-08-16",
-    "total_value": 61995122045,
-    "total_positions": 505,
-    "top50_value": 34131354368
-  },
-  {
     "period": "2023-09-30",
     "filing_date": "2023-11-15",
     "total_value": 62492700243,
@@ -82,5 +75,12 @@
     "total_value": 131679039771,
     "total_positions": 557,
     "top50_value": 79452008934
+  },
+  {
+    "period": "2026-06-30",
+    "filing_date": "2026-08-13",
+    "total_value": 155079663358,
+    "total_positions": 546,
+    "top50_value": 96900446193
   }
 ]
